@@ -1,0 +1,25 @@
+{
+  "name": "github-contributions-counter",
+  "version": "1.0.0",
+  "description": "A simple Javascript API that will return the public github contributions history for a user based on a universal function",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SammyRobensParadise/github-contributions-counter.git"
+  },
+  "keywords": [
+    "github",
+    "contributions",
+    "api",
+    "javascript"
+  ],
+  "author": "Sammy Robens-Paradise",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SammyRobensParadise/github-contributions-counter/issues"
+  },
+  "homepage": "https://github.com/SammyRobensParadise/github-contributions-counter#readme"
+}

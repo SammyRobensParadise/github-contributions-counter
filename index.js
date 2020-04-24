@@ -3,7 +3,7 @@ const jsdom = require('jsdom')
 const { JSDOM } = jsdom
 exports.getGitHubContributionsHistory = async (username, total, byYear) => {
   let results = {
-    annualContributions: '403',
+    annualContributions: '0',
   }
   if (total === 'total') {
     const fetchedURLForUser = await axios({
@@ -31,8 +31,16 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
       for (let i = 0; i < contributionsText.length; i++) {
         contributionsText[i] = parseInt(contributionsText[i].replace(/,/g, ''))
       }
-      totalContributions.push(contributionsText.filter(Boolean)[0].toString())
+      if (byYear == 'byYear') {
+        totalContributions.push({
+          contributions: contributionsText.filter(Boolean)[0].toString(),
+          year: contributionsText.filter(Boolean)[1].toString(),
+        })
+      } else {
+        totalContributions.push(contributionsText.filter(Boolean)[0].toString())
+      }
     }
+    
     console.log(totalContributions)
   } else {
     const fetchedURLForUser = await axios({

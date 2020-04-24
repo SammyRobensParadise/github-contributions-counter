@@ -5,7 +5,7 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
   let results = {
     annualContributions: '0',
   }
-  if (total === 'total') {
+  if (total === 'total' || byYear === 'byYear') {
     const fetchedURLForUser = await axios({
       method: 'get',
       url: `https://github.com/${username}`,
@@ -37,11 +37,15 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
           year: contributionsText.filter(Boolean)[1].toString(),
         })
       } else {
-        totalContributions.push(contributionsText.filter(Boolean)[0].toString())
+        totalContributions.push(contributionsText.filter(Boolean)[0])
       }
     }
-    
-    console.log(totalContributions)
+    if (total === 'total' && byYear != 'byYear') {
+      const reducer = (accumulator, currentValue) => accumulator + currentValue
+      return { totalContributions: totalContributions.reduce(reducer).toString() }
+    } else {
+      return totalContributions
+    }
   } else {
     const fetchedURLForUser = await axios({
       method: 'get',

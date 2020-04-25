@@ -49,21 +49,19 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
      * Create virtual DOM with JSDOM to parse HTML
      */
     const fetchedHTML = JSDOM.fragment(fetchedURLForUser.data)
-    let DateSelectors = fetchedHTML.getElementById('year-list-container')
+    let DateSelectors = fetchedHTML.querySelectorAll('a')
     if (DateSelectors === null) {
       return [{ error: 'unable to process request' }]
     }
-    DateSelectors = DateSelectors.querySelectorAll('a')
     let totalContributions = []
     for (let i = 0; i < DateSelectors.length; i++) {
-      const fetchedURLForUserWithDate = await axios({
-        method: 'get',
-        url: `https://github.com/${DateSelectors[i].href}`,
-        responseType: 'text',
-      })
-      /**
-       * Extract data from HTML
-       */
+      let fetchedURLForUserWithDate
+    if (DateSelectors[i].id.includes('year-link')) {
+        fetchedURLForUserWithDate = await axios({
+          method: 'get',
+          url: `https://github.com/${DateSelectors[i].href}`,
+          responseType: 'text',
+        })
       let fetchedURLwithDate = JSDOM.fragment(fetchedURLForUserWithDate.data)
       let contributionsSeletor = fetchedURLwithDate.querySelectorAll('h2')
       let contributionsText
@@ -84,6 +82,7 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
         totalContributions.push(contributionsText.filter(Boolean)[0])
       }
     }
+    } 
     if (total === 'total' && byYear != 'byYear') {
       const reducer = (accumulator, currentValue) => accumulator + currentValue
       /**

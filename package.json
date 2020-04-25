@@ -1,6 +1,6 @@
 {
   "name": "github-contributions-counter",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A simple Javascript API that will return the public github contributions history for a user based on a universal function",
   "main": "index.js",
   "scripts": {

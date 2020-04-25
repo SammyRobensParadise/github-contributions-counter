@@ -40,11 +40,16 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
    * if the user wants either the total or total by year
    */
   if (total === 'total' || byYear === 'byYear') {
-    const fetchedURLForUser = await axios({
-      method: 'get',
-      url: `https://github.com/${username}`,
-      responseType: 'text',
-    })
+    let fetchedURLForUser
+    try {
+      fetchedURLForUser = await axios({
+        method: 'get',
+        url: `https://github.com/${username}`,
+        responseType: 'text',
+      })
+    } catch (e) {
+      return [{ error: e }]
+    }
     /**
      * Create virtual DOM with JSDOM to parse HTML
      */
@@ -56,33 +61,37 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
     let totalContributions = []
     for (let i = 0; i < DateSelectors.length; i++) {
       let fetchedURLForUserWithDate
-    if (DateSelectors[i].id.includes('year-link')) {
-        fetchedURLForUserWithDate = await axios({
-          method: 'get',
-          url: `https://github.com/${DateSelectors[i].href}`,
-          responseType: 'text',
-        })
-      let fetchedURLwithDate = JSDOM.fragment(fetchedURLForUserWithDate.data)
-      let contributionsSeletor = fetchedURLwithDate.querySelectorAll('h2')
-      let contributionsText
-      contributionsSeletor.forEach((item) => {
-        if (item.textContent.includes('contributions')) {
-          contributionsText = item.textContent.split(' ')
+      if (DateSelectors[i].id.includes('year-link')) {
+        try {
+          fetchedURLForUserWithDate = await axios({
+            method: 'get',
+            url: `https://github.com/${DateSelectors[i].href}`,
+            responseType: 'text',
+          })
+        } catch (e) {
+          return [{ error: e }]
         }
-      })
-      for (let i = 0; i < contributionsText.length; i++) {
-        contributionsText[i] = parseInt(contributionsText[i].replace(/,/g, ''))
-      }
-      if (byYear == 'byYear') {
-        totalContributions.push({
-          contributions: contributionsText.filter(Boolean)[0].toString(),
-          year: contributionsText.filter(Boolean)[1].toString(),
+        let fetchedURLwithDate = JSDOM.fragment(fetchedURLForUserWithDate.data)
+        let contributionsSeletor = fetchedURLwithDate.querySelectorAll('h2')
+        let contributionsText
+        contributionsSeletor.forEach((item) => {
+          if (item.textContent.includes('contributions')) {
+            contributionsText = item.textContent.split(' ')
+          }
         })
-      } else {
-        totalContributions.push(contributionsText.filter(Boolean)[0])
+        for (let i = 0; i < contributionsText.length; i++) {
+          contributionsText[i] = parseInt(contributionsText[i].replace(/,/g, ''))
+        }
+        if (byYear == 'byYear') {
+          totalContributions.push({
+            contributions: contributionsText.filter(Boolean)[0].toString(),
+            year: contributionsText.filter(Boolean)[1].toString(),
+          })
+        } else {
+          totalContributions.push(contributionsText.filter(Boolean)[0])
+        }
       }
     }
-    } 
     if (total === 'total' && byYear != 'byYear') {
       const reducer = (accumulator, currentValue) => accumulator + currentValue
       /**
@@ -101,11 +110,16 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
      * Just fetch the total contributions
      * for a give user
      */
-    const fetchedURLForUser = await axios({
-      method: 'get',
-      url: `https://github.com/users/${username}/contributions`,
-      responseType: 'text',
-    })
+    let fetchedURLForUser
+    try {
+      fetchedURLForUser = await axios({
+        method: 'get',
+        url: `https://github.com/users/${username}/contributions`,
+        responseType: 'text',
+      })
+    } catch (e) {
+      return [{ error: e }]
+    }
     /**
      * Create virtual DOM with JSDOM to parse HTML
      */

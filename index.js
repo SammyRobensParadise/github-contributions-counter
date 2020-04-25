@@ -49,7 +49,11 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
      * Create virtual DOM with JSDOM to parse HTML
      */
     const fetchedHTML = JSDOM.fragment(fetchedURLForUser.data)
-    let DateSelectors = fetchedHTML.getElementById('year-list-container').querySelectorAll('a')
+    let DateSelectors = fetchedHTML.getElementById('year-list-container')
+    if (DateSelectors === null) {
+      return [{ error: 'unable to process request' }]
+    }
+    DateSelectors = DateSelectors.querySelectorAll('a')
     let totalContributions = []
     for (let i = 0; i < DateSelectors.length; i++) {
       const fetchedURLForUserWithDate = await axios({

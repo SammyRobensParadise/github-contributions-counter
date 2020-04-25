@@ -1,42 +1,66 @@
 # github-contributions-counter
 
-A simple Javascript API that will return the public github contributions history for a user based on a universal function\
+A simple Javascript API that will return the public Github contributions history for a user based on a universal function\
 <br>
 ![version](https://img.shields.io/npm/v/github-contributions-counter?style=for-the-badge)
-## A Quick Note :)
+
+#### A Quick Note 👀
 
 This was not designed in affiliation with Github, Getting contribution history is not part of their API as of the creation of this package.
 
-## Usage
-
+## Getting Started
+### Install via [npm github-contributions-counter](https://www.npmjs.com/package/github-contributions-counter)
 ```bash
 npm install github-contributions-counter
 ```
-
+### Usage
 ```js
+// normal js require
 const API = require('github-contributions-counter')
 
 API.getGitHubContributionsHistory('your_username_here').then((response) => {
   console.log(response)
 })
 /**
- * The expected response is an object of the following
- * (so far)
- *  response = {
- *            annualContributions: "1699"
- *           }
+ * The expected response is an array of objects of the following:
+ *
+ * response = [{ annualContributions: "1699" }]
+ *
+ * */
+
+API.getGitHubContributionsHistory('your_username_here', 'total').then((response) => {
+  console.log(response)
+})
+/**
+ * The expected response is an array of objects of the following:
+ *
+ * response = [{ totalContributions: '2027' }]
+ *
+ * */
+
+API.getGitHubContributionsHistory('your_username_here', 'total', 'byYear').then((response) => {
+  console.log(response)
+})
+/**
+ * The expected response is an array of objects of the following:
+ *
+ * response = [
+ *       { contributions: '768', year: '2020' },
+ *       { contributions: '1090', year: '2019' },
+ *        { contributions: '167', year: '2018' },
+ *       { contributions: '2', year: '2017' }
+ *      ]
+ *
  * */
 ```
-
-## What is in the pipeline (coming soon to a project near you)
-
-I hope to extend the API to be able to collect additional information such as total contributions, contributions between specific dates etc...\
-the future API would look something like this:
+Show off your contributions 🤟💻🦾
+## API
 
 ```js
-getGitHubContributionsHistory(username:string, year?:string, startDate?:string, EndDate?:string)
+getGitHubContributionsHistory(username:string, total?:string, byYear?:string)
 ```
-
+### Issues
+Given that this API is scraping Github webpages for the desired data, it is a) not the fastest; and b) dependent on the DOM nodes for Github user profiles not changing to a large extent. If it stops working, open an issue on the Github and i'll fit it asap! :)
 ### Contributing
 
 1. Fork

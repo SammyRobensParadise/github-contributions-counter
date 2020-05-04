@@ -44,9 +44,8 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
     try {
       fetchedURLForUser = await axios({
         method: 'get',
-        url: `https://github.com/${username}`,
+        url: `https://cors-anywhere.herokuapp.com/https://github.com/${username}`,
         responseType: 'text',
-        headers: { 'Access-Control-Allow-Origin': '*' },
       })
     } catch (e) {
       return [{ error: e }]
@@ -66,9 +65,8 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
         try {
           fetchedURLForUserWithDate = await axios({
             method: 'get',
-            url: `https://github.com/${DateSelectors[i].href}`,
+            url: `https://cors-anywhere.herokuapp.com/https://github.com/${DateSelectors[i].href}`,
             responseType: 'text',
-            headers: { 'Access-Control-Allow-Origin': '*' },
           })
         } catch (e) {
           return [{ error: e }]
@@ -116,9 +114,8 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
     try {
       fetchedURLForUser = await axios({
         method: 'get',
-        url: `https://github.com/users/${username}/contributions`,
+        url: `https://cors-anywhere.herokuapp.com/https://github.com/users/${username}/contributions`,
         responseType: 'text',
-        headers: { 'Access-Control-Allow-Origin': '*' },
       })
     } catch (e) {
       return [{ error: e }]

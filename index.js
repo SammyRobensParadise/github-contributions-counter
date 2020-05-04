@@ -46,6 +46,7 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
         method: 'get',
         url: `https://github.com/${username}`,
         responseType: 'text',
+        headers: { 'Access-Control-Allow-Origin': '*' },
       })
     } catch (e) {
       return [{ error: e }]
@@ -67,6 +68,7 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
             method: 'get',
             url: `https://github.com/${DateSelectors[i].href}`,
             responseType: 'text',
+            headers: { 'Access-Control-Allow-Origin': '*' },
           })
         } catch (e) {
           return [{ error: e }]
@@ -116,6 +118,7 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
         method: 'get',
         url: `https://github.com/users/${username}/contributions`,
         responseType: 'text',
+        headers: { 'Access-Control-Allow-Origin': '*' },
       })
     } catch (e) {
       return [{ error: e }]

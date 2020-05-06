@@ -27,8 +27,7 @@ exports.getGitHubContributionsHistory = async (username, config) => {
    */
   if (typeof username != 'string') {
     return {
-      error: 
-      `invalid args provided. expected username: string, total: string, byYear: string,\
+      error: `invalid args provided. expected username: string, total: string, byYear: string,\
          but got: \
         username: ${typeof username},\
         total: ${typeof config.total},\

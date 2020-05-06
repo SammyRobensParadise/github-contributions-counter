@@ -70,12 +70,12 @@ exports.getGitHubContributionsHistory = async (username, config) => {
     let totalContributions = []
     for (let i = 0; i < DateSelectors.length; i++) {
       let fetchedURLForUserWithDate
-      try {
+      try { 
         fetchedURLForUserWithDate = await axios({
           method: 'get',
           url: useProxy
-            ? `${useProxy}https://github.com/${DateSelectors[i].href}`
-            : `https://github.com/${DateSelectors[i].href}`,
+            ? `${useProxy}https://github.com/${DateSelectors[i].attribs.href}`
+            : `https://github.com/${DateSelectors[i].attribs.href}`,
           responseType: 'text',
         })
       } catch (e) {
@@ -88,14 +88,9 @@ exports.getGitHubContributionsHistory = async (username, config) => {
         contributionsText[i] = parseInt(contributionsText[i].replace(/,/g, ''))
       }
       if (config.byYear == 'byYear') {
-        const filteredContributionsText = contributionsText.filter(function (value) {
-          return !Number.isNaN(value).toString()
-        })
-        console.log(filteredContributionsText)
-        debugger
         totalContributions.push({
-          contributions: filteredContributionsText,
-          year: contributionsText.filter(Boolean)[1],
+          contributions: contributionsText.filter(Boolean)[0].toString(),
+          year: contributionsText.filter(Boolean)[1].toString(),
         })
       } else {
         totalContributions.push(contributionsText.filter(Boolean)[0])

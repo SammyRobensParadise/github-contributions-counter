@@ -6,8 +6,6 @@
 // imports
 const axios = require('axios')
 const cheerio = require('cheerio')
-const jsdom = require('jsdom')
-const { JSDOM } = jsdom
 
 /**
  * @readonly
@@ -29,10 +27,11 @@ exports.getGitHubContributionsHistory = async (username, config) => {
    */
   if (typeof username != 'string') {
     return {
-      error: `invalid args provided. expected username: string, total: string, byYear: string,
-         but got:
-        username: ${typeof username},
-        total: ${typeof config.total},
+      error: 
+      `invalid args provided. expected username: string, total: string, byYear: string,\
+         but got: \
+        username: ${typeof username},\
+        total: ${typeof config.total},\
         byYear: ${typeof config.byYear}
           `,
     }
@@ -70,7 +69,7 @@ exports.getGitHubContributionsHistory = async (username, config) => {
     let totalContributions = []
     for (let i = 0; i < DateSelectors.length; i++) {
       let fetchedURLForUserWithDate
-      try { 
+      try {
         fetchedURLForUserWithDate = await axios({
           method: 'get',
           url: useProxy
@@ -129,8 +128,8 @@ exports.getGitHubContributionsHistory = async (username, config) => {
     /**
      * Create virtual DOM with JSDOM to parse HTML
      */
-    const fetchedHTML = JSDOM.fragment(fetchedURLForUser.data).firstElementChild
-    let contributionsText = fetchedHTML.querySelector('h2').textContent.split(' ')
+    const $fetchedHTML = cheerio.load(fetchedURLForUser.data)
+    let contributionsText = $fetchedHTML('h2:contains(contributions)').text().split(' ')
     for (let i = 0; i < contributionsText.length; i++) {
       contributionsText[i] = parseInt(contributionsText[i].replace(/,/g, ''))
     }

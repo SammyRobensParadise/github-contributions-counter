@@ -15,7 +15,15 @@ const { JSDOM } = jsdom
  * @param {byYear} string
  * @returns {object}
  */
-exports.getGitHubContributionsHistory = async (username, total, byYear) => {
+exports.getGitHubContributionsHistory = async (username, config) => {
+  let useProxy = false
+    if (config.proxy && typeof config.proxy === 'boolean') {
+      useProxy = 'https://cors-anywhere.herokuapp.com/'
+    } else if (config.proxy) {
+      useProxy = config.proxy
+    } else {
+      useProxy = false
+    }
   /**
    * type checking to ensure that
    * the url provided is a string
@@ -25,8 +33,8 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
       error: `invalid args provided. expected username: string, total: string, byYear: string,
          but got:
         username: ${typeof username},
-        total: ${typeof total},
-        byYear: ${typeof byYear}
+        total: ${typeof config.total},
+        byYear: ${typeof config.byYear}
           `,
     }
   }
@@ -39,12 +47,14 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
   /**
    * if the user wants either the total or total by year
    */
-  if (total === 'total' || byYear === 'byYear') {
+  if (config.total === 'total' || config.byYear === 'byYear') {
     let fetchedURLForUser
     try {
       fetchedURLForUser = await axios({
         method: 'get',
-        url: `https://cors-anywhere.herokuapp.com/https://github.com/${username}`,
+        url: useProxy
+          ? `${useProxy}https://github.com/${username}`
+          : `https://github.com/${username}`,
         responseType: 'text',
       })
     } catch (e) {
@@ -65,7 +75,9 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
         try {
           fetchedURLForUserWithDate = await axios({
             method: 'get',
-            url: `https://cors-anywhere.herokuapp.com/https://github.com/${DateSelectors[i].href}`,
+            url: useProxy
+              ? `${useProxy}https://github.com/${DateSelectors[i].href}`
+              : `https://github.com/${DateSelectors[i].href}`,
             responseType: 'text',
           })
         } catch (e) {
@@ -82,7 +94,7 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
         for (let i = 0; i < contributionsText.length; i++) {
           contributionsText[i] = parseInt(contributionsText[i].replace(/,/g, ''))
         }
-        if (byYear == 'byYear') {
+        if (config.byYear == 'byYear') {
           totalContributions.push({
             contributions: contributionsText.filter(Boolean)[0].toString(),
             year: contributionsText.filter(Boolean)[1].toString(),
@@ -92,7 +104,7 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
         }
       }
     }
-    if (total === 'total' && byYear != 'byYear') {
+    if (config.total === 'total' && config.byYear != 'byYear') {
       const reducer = (accumulator, currentValue) => accumulator + currentValue
       /**
        * if just looking for the year return total contributions by year as
@@ -114,7 +126,9 @@ exports.getGitHubContributionsHistory = async (username, total, byYear) => {
     try {
       fetchedURLForUser = await axios({
         method: 'get',
-        url: `https://cors-anywhere.herokuapp.com/https://github.com/users/${username}/contributions`,
+        url: useProxy
+          ? `${useProxy}https://github.com/users/${username}/contributions`
+          : `https://github.com/users/${username}/contributions`,
         responseType: 'text',
       })
     } catch (e) {

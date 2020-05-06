@@ -5,25 +5,24 @@
 
 // imports
 const axios = require('axios')
+const cheerio = require('cheerio');
 const jsdom = require('jsdom')
 const { JSDOM } = jsdom
 
 /**
  * @readonly
- * @param {username} string
- * @param {total} string
- * @param {byYear} string
+ * @param {config:{total, byYear, proxy}}
  * @returns {object}
  */
 exports.getGitHubContributionsHistory = async (username, config) => {
   let useProxy = false
-    if (config.proxy && typeof config.proxy === 'boolean') {
-      useProxy = 'https://cors-anywhere.herokuapp.com/'
-    } else if (config.proxy) {
-      useProxy = config.proxy
-    } else {
-      useProxy = false
-    }
+  if (config.proxy && typeof config.proxy === 'boolean') {
+    useProxy = 'https://cors-anywhere.herokuapp.com/'
+  } else if (config.proxy) {
+    useProxy = config.proxy
+  } else {
+    useProxy = false
+  }
   /**
    * type checking to ensure that
    * the url provided is a string

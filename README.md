@@ -22,6 +22,8 @@ This was not designed in affiliation with Github, Getting contribution history i
 ```bash
 npm install github-contributions-counter
 ```
+### Demo
+[Code Sandbox github-contributions-counter](https://codesandbox.io/s/github-contributions-counter-2x0ev?file=/index.html)
 
 ### Usage
 

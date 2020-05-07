@@ -1,6 +1,6 @@
 # github-contributions-counter
 
-A simple Javascript API that will return the public Github contributions history for a user based on a universal function\
+A simple Javascript API that will return the public Github contributions history for a user based on a universal function
 
 
 ![githhub-contributions-counter](https://i.ibb.co/tq8VpG9/github-contributions-counter-logo.png) 

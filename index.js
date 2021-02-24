@@ -25,21 +25,21 @@ exports.getGitHubContributionsHistory = async (username, config) => {
    * type checking to ensure that
    * the url provided is a string
    */
-  if (typeof username != 'string') {
+  if (typeof username !== 'string') {
     return {
       error: `invalid args provided. expected username: string, total: string, byYear: string,\
          but got: \
         username: ${typeof username},\
         total: ${typeof config.total},\
         byYear: ${typeof config.byYear}
-          `,
+          `
     }
   }
   /**
    * set initial results
    */
   let results = {
-    annualContributions: '0',
+    annualContributions: '0'
   }
   /**
    * if the user wants either the total or total by year
@@ -54,7 +54,7 @@ exports.getGitHubContributionsHistory = async (username, config) => {
           : `https://github.com/${username}`,
         responseType: 'text',
         headers: {
-          "Access-Control-Allow-Origin": "*",
+          'Access-Control-Allow-Origin': '*'
         }
       })
     } catch (e) {
@@ -64,11 +64,11 @@ exports.getGitHubContributionsHistory = async (username, config) => {
      * Create virtual DOM with JSDOM to parse HTML
      */
     const $ = cheerio.load(fetchedURLForUser.data)
-    let DateSelectors = $("a[id*='year-link']")
+    const DateSelectors = $("a[id*='year-link']")
     if (DateSelectors === null) {
       return [{ error: 'unable to process request' }]
     }
-    let totalContributions = []
+    const totalContributions = []
     for (let i = 0; i < DateSelectors.length; i++) {
       let fetchedURLForUserWithDate
       try {
@@ -77,21 +77,23 @@ exports.getGitHubContributionsHistory = async (username, config) => {
           url: useProxy
             ? `${useProxy}https://github.com/${DateSelectors[i].attribs.href}`
             : `https://github.com/${DateSelectors[i].attribs.href}`,
-          responseType: 'text',
+          responseType: 'text'
         })
       } catch (e) {
         return [{ error: e }]
       }
       const $fetchedURLwithDate = cheerio.load(fetchedURLForUserWithDate.data)
-      let contributionsSeletor = $fetchedURLwithDate('h2:contains(contributions)').text()
-      let contributionsText = contributionsSeletor.split(' ')
+      const contributionsSeletor = $fetchedURLwithDate(
+        'h2:contains(contributions)'
+      ).text()
+      const contributionsText = contributionsSeletor.split(' ')
       for (let i = 0; i < contributionsText.length; i++) {
         contributionsText[i] = parseInt(contributionsText[i].replace(/,/g, ''))
       }
       if (config.byYear == 'byYear') {
         totalContributions.push({
           contributions: contributionsText.filter(Boolean)[0].toString(),
-          year: contributionsText.filter(Boolean)[1].toString(),
+          year: contributionsText.filter(Boolean)[1].toString()
         })
       } else {
         totalContributions.push(contributionsText.filter(Boolean)[0])
@@ -103,41 +105,46 @@ exports.getGitHubContributionsHistory = async (username, config) => {
        * if just looking for the year return total contributions by year as
        * an object
        */
-      return [{ totalContributions: totalContributions.reduce(reducer).toString() }]
-    } else {
-      /**
-       * return an object of contributions by year
-       */
-      return totalContributions
-    }
-  } else {
-    /**
-     * Just fetch the total contributions
-     * for a give user
-     */
-    let fetchedURLForUser
-    try {
-      fetchedURLForUser = await axios({
-        method: 'get',
-        url: useProxy
-          ? `${useProxy}https://github.com/users/${username}/contributions`
-          : `https://github.com/users/${username}/contributions`,
-        responseType: 'text',
-      })
-    } catch (e) {
-      return [{ error: e }]
+      return [
+        {
+          totalContributions: totalContributions.reduce(reducer).toString()
+        }
+      ]
     }
     /**
-     * Create virtual DOM with JSDOM to parse HTML
+     * return an object of contributions by year
      */
-    const $fetchedHTML = cheerio.load(fetchedURLForUser.data)
-    let contributionsText = $fetchedHTML('h2:contains(contributions)').text().split(' ')
-    for (let i = 0; i < contributionsText.length; i++) {
-      contributionsText[i] = parseInt(contributionsText[i].replace(/,/g, ''))
-    }
-    results = {
-      annualContributions: contributionsText.filter(Boolean).toString(),
-    }
+    return totalContributions
   }
+  /**
+   * Just fetch the total contributions
+   * for a give user
+   */
+  let fetchedURLForUser
+  try {
+    fetchedURLForUser = await axios({
+      method: 'get',
+      url: useProxy
+        ? `${useProxy}https://github.com/users/${username}/contributions`
+        : `https://github.com/users/${username}/contributions`,
+      responseType: 'text'
+    })
+  } catch (e) {
+    return [{ error: e }]
+  }
+  /**
+   * Create virtual DOM with JSDOM to parse HTML
+   */
+  const $fetchedHTML = cheerio.load(fetchedURLForUser.data)
+  const contributionsText = $fetchedHTML('h2:contains(contributions)')
+    .text()
+    .split(' ')
+  for (let i = 0; i < contributionsText.length; i++) {
+    contributionsText[i] = parseInt(contributionsText[i].replace(/,/g, ''))
+  }
+  results = {
+    annualContributions: contributionsText.filter(Boolean).toString()
+  }
+
   return [results]
 }

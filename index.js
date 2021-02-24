@@ -50,9 +50,12 @@ exports.getGitHubContributionsHistory = async (username, config) => {
       fetchedURLForUser = await axios({
         method: 'get',
         url: useProxy
-          ? `${useProxy}https://github.com/${username}`
+          ? `https://github.com/${username}`
           : `https://github.com/${username}`,
         responseType: 'text',
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        }
       })
     } catch (e) {
       return [{ error: e }]

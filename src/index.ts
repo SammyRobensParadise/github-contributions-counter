@@ -1,4 +1,3 @@
-const Add = ({ a, b }: { a: number; b: number }) => {
-  return a + b
-}
-export default Add
+import { getGithubContributions, GetGithubContributions } from './core/main'
+
+export { getGithubContributions, GetGithubContributions }

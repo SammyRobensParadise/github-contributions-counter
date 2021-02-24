@@ -5,6 +5,7 @@ import typescript from 'rollup-plugin-typescript2'
 import url from '@rollup/plugin-url'
 import analyze from 'rollup-plugin-analyzer'
 import externals from 'rollup-plugin-node-externals'
+import json from '@rollup/plugin-json'
 
 import pkg from './package.json'
 
@@ -27,6 +28,7 @@ export default [
       peerDepsExternal(),
       commonjs(),
       typescript(),
+      json(),
       url(),
       externals(),
       resolve(),

@@ -1,12 +1,11 @@
-import jsdom from 'jsdom'
-const { JSDOM } = jsdom
+import cheerio from 'cheerio'
 interface Parce {
   webpage: string
 }
-const parce = ({ webpage }: Parce): NodeListOf<Element> => {
-  const dom = new JSDOM(webpage)
-  const urls = dom.window.document.querySelectorAll("a[id*='year-link']")
-  console.log(urls)
-  return urls
+const parce = ({ webpage }: Parce): cheerio.Cheerio => {
+  const $ = cheerio.load(webpage)
+
+  const DateSelectors = $("a[id*='year-link']")
+  return DateSelectors
 }
 export default parce

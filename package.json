@@ -4,11 +4,12 @@
   "description": "A simple Javascript API that will return the public github contributions history for a user based on a universal function",
   "main": "./dist/index.js",
   "module": "./dist/index.es.js",
+  "type": "module",
   "files": [
     "./dist"
   ],
   "scripts": {
-    "test": "test",
+    "test": "node ./test/test.ts",
     "build": "rollup -c",
     "lint:": "eslint src --ext .ts,.tsx",
     "format": "eslint src --ext .ts,.tsx --fix"

@@ -4,5 +4,5 @@ interface Scraper {
     proxy: null | string;
     logs: LogLevels;
 }
-declare const scraper: ({ username, proxy, logs }: Scraper) => Promise<HTMLAllCollection>;
+declare const scraper: ({ username, proxy, logs }: Scraper) => Promise<string>;
 export default scraper;

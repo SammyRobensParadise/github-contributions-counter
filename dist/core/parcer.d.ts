@@ -1,4 +1,5 @@
 interface Parce {
-    webpage: HTMLAllCollection;
+    webpage: string;
 }
-declare const parce: ({ webpage }: Parce) => string;
+declare const parce: ({ webpage }: Parce) => NodeListOf<Element>;
+export default parce;

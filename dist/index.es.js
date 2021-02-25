@@ -3563,7 +3563,17 @@ axios_1.default = _default;
 
 var axios$1 = axios_1;
 
-const scraper = ({ username, proxy }) => __awaiter(void 0, void 0, void 0, function* () {
+const logger = ({ logLevel = 'warning', message = 'An unknown Error Occured' }) => {
+    switch (logLevel) {
+        case 'warning':
+            console.warn(message);
+            break;
+        case 'error':
+            throw new Error(message);
+    }
+};
+
+const scraper = ({ username, proxy, logs }) => __awaiter(void 0, void 0, void 0, function* () {
     const githubUrl = `${githubRootURL}/${username}`;
     const fetchURL = proxy ? `${proxy}/${githubUrl}` : `${corsProxy}/${githubUrl}`;
     const res = yield axios$1({
@@ -3575,7 +3585,10 @@ const scraper = ({ username, proxy }) => __awaiter(void 0, void 0, void 0, funct
         }
     });
     if (res.status !== 200) {
-        throw new Error(`${res.statusText}: Status code ${res.status.toString()}. This is likely a problem with the proxy or the url`);
+        logger({
+            logLevel: logs,
+            message: `Status code ${res.status.toString()}. This is likely a problem with the proxy or the u`
+        });
     }
     return res.data;
 });
@@ -3589,7 +3602,12 @@ const getGithubContributions = ({ username, config = {
         throw new Error('You must provide a github username');
     }
     const requestProxy = (config === null || config === void 0 ? void 0 : config.proxy) ? config.proxy : null;
-    const webpage = yield scraper({ username: username, proxy: requestProxy });
+    const logLevels = (config === null || config === void 0 ? void 0 : config.logs) ? config.logs : 'none';
+    const webpage = yield scraper({
+        username: username,
+        proxy: requestProxy,
+        logs: logLevels
+    });
     return webpage;
 });
 

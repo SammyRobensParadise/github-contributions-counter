@@ -23,7 +23,7 @@ export const getGithubContributions = async ({
   const requestProxy = config?.proxy ? config.proxy : null
   const logLevels = config?.logs ? config.logs : 'none'
 
-  const webpage = await scraper({
+  const webpage: HTMLAllCollection = await scraper({
     username: username,
     proxy: requestProxy,
     logs: logLevels

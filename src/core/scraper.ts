@@ -8,7 +8,11 @@ interface Scraper {
   proxy: null | string
   logs: LogLevels
 }
-const scraper = async ({ username, proxy, logs }: Scraper): Promise<any> => {
+const scraper = async ({
+  username,
+  proxy,
+  logs
+}: Scraper): Promise<HTMLAllCollection> => {
   const githubUrl = `${githubRootURL}/${username}`
   const fetchURL = proxy ? `${proxy}/${githubUrl}` : `${corsProxy}/${githubUrl}`
   const res = await axios({

@@ -1,10 +1,11 @@
 import scraper from './scraper'
+export type LogLevels = 'error' | 'warning' | 'none'
 export interface GetGithubContributions {
   username: string
   config?: {
     partition?: undefined | 'year' | 'all'
     proxy?: undefined | string | null
-    logs?: 'error' | 'warning' | 'none'
+    logs?: LogLevels
   }
 }
 
@@ -20,6 +21,12 @@ export const getGithubContributions = async ({
     throw new Error('You must provide a github username')
   }
   const requestProxy = config?.proxy ? config.proxy : null
-  const webpage = await scraper({ username: username, proxy: requestProxy })
+  const logLevels = config?.logs ? config.logs : 'none'
+
+  const webpage = await scraper({
+    username: username,
+    proxy: requestProxy,
+    logs: logLevels
+  })
   return webpage
 }

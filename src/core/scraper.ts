@@ -1,11 +1,14 @@
 import { githubRootURL, corsProxy } from './constants'
 import axios from 'axios'
+import { LogLevels } from './main'
+import { logger } from './utils'
 
 interface Scraper {
   username: string
   proxy: null | string
+  logs: LogLevels
 }
-const scraper = async ({ username, proxy }: Scraper): Promise<any> => {
+const scraper = async ({ username, proxy, logs }: Scraper): Promise<any> => {
   const githubUrl = `${githubRootURL}/${username}`
   const fetchURL = proxy ? `${proxy}/${githubUrl}` : `${corsProxy}/${githubUrl}`
   const res = await axios({
@@ -17,11 +20,10 @@ const scraper = async ({ username, proxy }: Scraper): Promise<any> => {
     }
   })
   if (res.status !== 200) {
-    throw new Error(
-      `${
-        res.statusText
-      }: Status code ${res.status.toString()}. This is likely a problem with the proxy or the url`
-    )
+    logger({
+      logLevel: logs,
+      message: `Status code ${res.status.toString()}. This is likely a problem with the proxy or the u`
+    })
   }
   return res.data
 }

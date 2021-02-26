@@ -38,6 +38,6 @@ export const getGithubContributions = async ({
     })
   }
   const urls = parce({ webpage: webpage })
-
+  console.log(urls)
   return urls
 }

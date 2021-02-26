@@ -1,4 +1,4 @@
-import cheerio from 'cheerio';
+/// <reference types="cheerio" />
 interface Parce {
     webpage: string;
 }

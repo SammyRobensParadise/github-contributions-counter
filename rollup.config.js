@@ -6,7 +6,6 @@ import url from '@rollup/plugin-url'
 import analyze from 'rollup-plugin-analyzer'
 import externals from 'rollup-plugin-node-externals'
 import json from '@rollup/plugin-json'
-import replace from '@rollup/plugin-replace'
 
 import pkg from './package.json'
 
@@ -27,15 +26,6 @@ export default [
     ],
     external: ['readable-stream', 'readable-stream/transform'],
     plugins: [
-      replace({
-        preventAssignment: false,
-        delimiters: ['', ''],
-        values: {
-          "require('readable-stream/transform')": "require('stream').Transform",
-          'require("readable-stream/transform")': 'require("stream").Transform',
-          'readable-stream': 'stream'
-        }
-      }),
       peerDepsExternal(),
       commonjs({
         transformMixedEsModules: true

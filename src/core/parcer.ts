@@ -1,11 +1,11 @@
-import cheerio from 'cheerio'
+import { parse as parcer } from 'himalaya'
+
 interface Parce {
   webpage: string
 }
 const parce = ({ webpage }: Parce): cheerio.Cheerio => {
-  const $ = cheerio.load(webpage)
-
-  const DateSelectors = $("a[id*='year-link']")
+  console.log(webpage)
+  const DateSelectors = parcer(webpage)
   return DateSelectors
 }
 export default parce

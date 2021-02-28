@@ -1,5 +1,5 @@
 export declare type LogLevels = 'error' | 'warning' | 'none';
-export declare type Partitions = undefined | 'year' | 'all';
+export declare type Partitions = undefined | 'year' | 'all' | 'current';
 export interface GetGithubContributions {
     username: string;
     config?: {

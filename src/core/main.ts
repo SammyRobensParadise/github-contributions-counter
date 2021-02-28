@@ -4,7 +4,7 @@ import { logger } from './utils'
 import collector from './collector'
 import format from './formatter'
 export type LogLevels = 'error' | 'warning' | 'none'
-export type Partitions = undefined | 'year' | 'all'
+export type Partitions = undefined | 'year' | 'all' | 'current'
 
 export interface GetGithubContributions {
   username: string
@@ -47,7 +47,11 @@ export const getGithubContributions = async ({
     })
     return null
   }
-  const urlsToQuery = parcer({ webpage: webpage })
+  const urlsToQuery = parcer({
+    webpage: webpage,
+    partitions: config.partition,
+    username: username
+  })
   if (!urlsToQuery) {
     logger({
       logLevel: logLevels,

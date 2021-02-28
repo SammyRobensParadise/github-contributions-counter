@@ -13,6 +13,9 @@ const format = ({ rawData, partition }: Format) => {
       formattedData = data
       break
     }
+    case 'current': {
+      formattedData = data
+    }
     case 'all': {
       const years = data.map((e) => {
         return e?.year
@@ -22,8 +25,6 @@ const format = ({ rawData, partition }: Format) => {
           return parseInt(e?.contributions)
         }
       })
-      console.log(contribs)
-
       const totalContribs = contribs.reduce((a, b) => a + b, 0)?.toString()
 
       const blob = [

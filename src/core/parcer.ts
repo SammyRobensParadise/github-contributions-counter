@@ -1,9 +1,12 @@
 const jsdom = require('jsdom')
 const { jsdom: JSDOM } = jsdom
 import { githubRootURL } from './constants'
+import { Partitions } from './main'
 
 interface Parcer {
   webpage: string
+  partitions: Partitions
+  username: string
 }
 
 export type UrlsToQuery = Array<{
@@ -11,8 +14,21 @@ export type UrlsToQuery = Array<{
   year: string
 }>
 
-const parcer = ({ webpage }: Parcer): UrlsToQuery | null => {
+const parcer = ({
+  webpage,
+  partitions,
+  username
+}: Parcer): UrlsToQuery | null => {
   const dom = new JSDOM(webpage, { runScripts: 'dangerously' })
+  if (partitions === 'current') {
+    return [
+      {
+        url: `${githubRootURL}/${username}`,
+        year: 'current'
+      }
+    ]
+  }
+
   const els: NodeListOf<HTMLAnchorElement> = dom.querySelectorAll(
     "a[id*='year-link']"
   )

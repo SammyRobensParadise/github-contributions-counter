@@ -3592,8 +3592,16 @@ const scraper = ({ username, proxy, logs }) => __awaiter(void 0, void 0, void 0,
 
 const jsdom = require('jsdom');
 const { jsdom: JSDOM } = jsdom;
-const parcer = ({ webpage }) => {
+const parcer = ({ webpage, partitions, username }) => {
     const dom = new JSDOM(webpage, { runScripts: 'dangerously' });
+    if (partitions === 'current') {
+        return [
+            {
+                url: `${githubRootURL}/${username}`,
+                year: 'current'
+            }
+        ];
+    }
     const els = dom.querySelectorAll("a[id*='year-link']");
     if (!els.length) {
         return null;
@@ -3662,6 +3670,9 @@ const format = ({ rawData, partition }) => {
             formattedData = data;
             break;
         }
+        case 'current': {
+            formattedData = data;
+        }
         case 'all': {
             const years = data.map((e) => {
                 return e === null || e === void 0 ? void 0 : e.year;
@@ -3671,7 +3682,6 @@ const format = ({ rawData, partition }) => {
                     return parseInt(e === null || e === void 0 ? void 0 : e.contributions);
                 }
             });
-            console.log(contribs);
             const totalContribs = (_a = contribs.reduce((a, b) => a + b, 0)) === null || _a === void 0 ? void 0 : _a.toString();
             const blob = [
                 {
@@ -3712,7 +3722,11 @@ const getGithubContributions = ({ username, config = {
         });
         return null;
     }
-    const urlsToQuery = parcer({ webpage: webpage });
+    const urlsToQuery = parcer({
+        webpage: webpage,
+        partitions: config.partition,
+        username: username
+    });
     if (!urlsToQuery) {
         logger({
             logLevel: logLevels,

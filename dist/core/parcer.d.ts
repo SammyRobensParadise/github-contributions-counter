@@ -1,6 +1,5 @@
-/// <reference types="cheerio" />
-interface Parce {
+interface Parcer {
     webpage: string;
 }
-declare const parce: ({ webpage }: Parce) => cheerio.Cheerio;
-export default parce;
+declare const parcer: ({ webpage }: Parcer) => any;
+export default parcer;

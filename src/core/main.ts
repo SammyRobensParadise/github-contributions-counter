@@ -1,5 +1,5 @@
 import scraper from './scraper'
-import parce from './parcer'
+import parcer from './parcer'
 import { logger } from './utils'
 export type LogLevels = 'error' | 'warning' | 'none'
 export interface GetGithubContributions {
@@ -37,7 +37,6 @@ export const getGithubContributions = async ({
         'A Github profile could not be fetched. There are likely errors above'
     })
   }
-  const urls = parce({ webpage: webpage })
-  console.log(urls)
+  const urls = parcer({ webpage: webpage })
   return urls
 }

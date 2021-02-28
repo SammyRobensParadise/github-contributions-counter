@@ -1,11 +1,13 @@
-import { parse as parcer } from 'himalaya'
+const jsdom = require('jsdom')
+const { jsdom: JSDOM } = jsdom
 
-interface Parce {
+interface Parcer {
   webpage: string
 }
-const parce = ({ webpage }: Parce): cheerio.Cheerio => {
-  console.log(webpage)
-  const DateSelectors = parcer(webpage)
-  return DateSelectors
+const parcer = ({ webpage }: Parcer): any => {
+  const dom = new JSDOM(webpage, { runScripts: 'dangerously' })
+  const urls = dom.querySelectorAll("a[id*='year-link']")
+  console.log(urls)
+  return urls
 }
-export default parce
+export default parcer

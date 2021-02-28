@@ -77,6 +77,32 @@ An optional `config` object can be added as a second parameter to customize beha
 
 Contributions are welcomed and encouraged! Refer to [Contribution Guidelines](docs/CONTRIBUTING.md)
 
+## Development
+
+1. Clone
+
+```bash
+git clone git@github.com:SammyRobensParadise/github-contributions-counter.git
+```
+
+2. Install
+
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Develop 💻
+
+4. Build using `rollup.js`
+
+```bash
+npm run build
+# or
+yarn run build
+```
+
 ## Info
 
 Author: Sammy Robens-Paradise. [sammy.world](https://sammy.world)

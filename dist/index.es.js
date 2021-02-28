@@ -33,6 +33,26 @@ function __awaiter(thisArg, _arguments, P, generator) {
     });
 }
 
+function __values(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+}
+
+function __asyncValues(o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+}
+
 const githubRootURL = 'https://github.com';
 const corsProxy = 'https://glacial-citadel-92798.herokuapp.com';
 
@@ -3558,10 +3578,64 @@ const jsdom = require('jsdom');
 const { jsdom: JSDOM } = jsdom;
 const parcer = ({ webpage }) => {
     const dom = new JSDOM(webpage, { runScripts: 'dangerously' });
-    const urls = dom.querySelectorAll("a[id*='year-link']");
-    console.log(urls);
+    const els = dom.querySelectorAll("a[id*='year-link']");
+    if (!els.length) {
+        return null;
+    }
+    const urls = Array.from(els).map((e) => {
+        return { url: `${githubRootURL}${e.href}`, year: e.innerHTML };
+    });
     return urls;
 };
+
+const jsdom$1 = require('jsdom');
+const { jsdom: JSDOM$1 } = jsdom$1;
+const collector = ({ urlsToQuery, proxy, logs }) => { var urlsToQuery_1, urlsToQuery_1_1; return __awaiter(void 0, void 0, void 0, function* () {
+    var e_1, _a;
+    let data = [];
+    if (!urlsToQuery) {
+        return data;
+    }
+    try {
+        for (urlsToQuery_1 = __asyncValues(urlsToQuery); urlsToQuery_1_1 = yield urlsToQuery_1.next(), !urlsToQuery_1_1.done;) {
+            const o = urlsToQuery_1_1.value;
+            const fetchURL = proxy ? `${proxy}/${o.url}` : `${corsProxy}/${o.url}`;
+            const res = yield axios$1({
+                method: 'get',
+                url: fetchURL,
+                responseType: 'text',
+                headers: {
+                    'Access-Control-Allow-Origin': '*'
+                }
+            });
+            if (res.status !== 200) {
+                logger({
+                    logLevel: logs,
+                    message: 'Failed to fetch contributions urls...'
+                });
+            }
+            const dom = new JSDOM$1(res.data);
+            const candidates = Array.from(dom.querySelectorAll('h2'));
+            const candidate = candidates.filter((c) => c.innerHTML.toString().includes('contributions'))[0].innerHTML;
+            const cleanCandidate = candidate === null || candidate === void 0 ? void 0 : candidate.replace(/,/g, '');
+            const temp = cleanCandidate.match(/\d+/);
+            const amount = temp ? temp[0] : null;
+            const blob = {
+                year: o.year,
+                contributions: amount
+            };
+            data.push(blob);
+        }
+    }
+    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+    finally {
+        try {
+            if (urlsToQuery_1_1 && !urlsToQuery_1_1.done && (_a = urlsToQuery_1.return)) yield _a.call(urlsToQuery_1);
+        }
+        finally { if (e_1) throw e_1.error; }
+    }
+    return data;
+}); };
 
 const getGithubContributions = ({ username, config = {
     partition: 'all',
@@ -3584,8 +3658,19 @@ const getGithubContributions = ({ username, config = {
             message: 'A Github profile could not be fetched. There are likely errors above'
         });
     }
-    const urls = parcer({ webpage: webpage });
-    return urls;
+    const urlsToQuery = parcer({ webpage: webpage });
+    if (!urlsToQuery) {
+        logger({
+            logLevel: logLevels,
+            message: `Contribution URLs could not be found. It is possible that Githubs DOM has changed. If you belive this to be the case open an issue at: https://github.com/SammyRobensParadise/github-contributions-counter`
+        });
+    }
+    const rawData = yield collector({
+        urlsToQuery: urlsToQuery,
+        proxy: requestProxy,
+        logs: logLevels
+    });
+    return rawData;
 });
 
 export { getGithubContributions };

@@ -1,6 +1,7 @@
 import scraper from './scraper'
 import parcer from './parcer'
 import { logger } from './utils'
+import collector from './collector'
 export type LogLevels = 'error' | 'warning' | 'none'
 export interface GetGithubContributions {
   username: string
@@ -11,6 +12,11 @@ export interface GetGithubContributions {
   }
 }
 
+export type All = {
+  year: string
+  contributions: string | null
+}
+
 export const getGithubContributions = async ({
   username,
   config = {
@@ -18,7 +24,7 @@ export const getGithubContributions = async ({
     proxy: null,
     logs: 'none'
   }
-}: GetGithubContributions): Promise<any> => {
+}: GetGithubContributions): Promise<Array<All> | any> => {
   if (!username) {
     throw new Error('You must provide a github username')
   }
@@ -37,6 +43,18 @@ export const getGithubContributions = async ({
         'A Github profile could not be fetched. There are likely errors above'
     })
   }
-  const urls = parcer({ webpage: webpage })
-  return urls
+  const urlsToQuery = parcer({ webpage: webpage })
+  if (!urlsToQuery) {
+    logger({
+      logLevel: logLevels,
+      message: `Contribution URLs could not be found. It is possible that Githubs DOM has changed. If you belive this to be the case open an issue at: https://github.com/SammyRobensParadise/github-contributions-counter`
+    })
+  }
+
+  const rawData = await collector({
+    urlsToQuery: urlsToQuery,
+    proxy: requestProxy,
+    logs: logLevels
+  })
+  return rawData
 }

@@ -7,4 +7,8 @@ export interface GetGithubContributions {
         logs?: LogLevels;
     };
 }
-export declare const getGithubContributions: ({ username, config }: GetGithubContributions) => Promise<any>;
+export declare type All = {
+    year: string;
+    contributions: string | null;
+};
+export declare const getGithubContributions: ({ username, config }: GetGithubContributions) => Promise<Array<All> | any>;

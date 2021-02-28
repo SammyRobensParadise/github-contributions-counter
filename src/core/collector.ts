@@ -16,8 +16,8 @@ const collector = async ({
   urlsToQuery,
   proxy,
   logs
-}: Collector): Promise<any> => {
-  let data: Array<any> = []
+}: Collector): Promise<Array<All | null>> => {
+  let data: Array<All | null> = []
   if (!urlsToQuery) {
     return data
   }

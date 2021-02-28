@@ -3653,6 +3653,43 @@ const collector = ({ urlsToQuery, proxy, logs }) => { var urlsToQuery_1, urlsToQ
     return data;
 }); };
 
+const format = ({ rawData, partition }) => {
+    var _a;
+    let formattedData;
+    const data = rawData;
+    switch (partition) {
+        case 'year': {
+            formattedData = data;
+            break;
+        }
+        case 'all': {
+            const years = data.map((e) => {
+                return e === null || e === void 0 ? void 0 : e.year;
+            });
+            const contribs = data.map((e) => {
+                if (typeof (e === null || e === void 0 ? void 0 : e.contributions) === 'string') {
+                    return parseInt(e === null || e === void 0 ? void 0 : e.contributions);
+                }
+            });
+            console.log(contribs);
+            const totalContribs = (_a = contribs.reduce((a, b) => a + b, 0)) === null || _a === void 0 ? void 0 : _a.toString();
+            const blob = [
+                {
+                    contributions: totalContribs ? totalContribs : null,
+                    year: years ? years : null
+                }
+            ];
+            formattedData = blob ? blob : null;
+            break;
+        }
+        default: {
+            formattedData = data;
+            break;
+        }
+    }
+    return formattedData;
+};
+
 const getGithubContributions = ({ username, config = {
     partition: 'all',
     proxy: null,
@@ -3673,6 +3710,7 @@ const getGithubContributions = ({ username, config = {
             logLevel: logLevels,
             message: 'A Github profile could not be fetched. There are likely errors above'
         });
+        return null;
     }
     const urlsToQuery = parcer({ webpage: webpage });
     if (!urlsToQuery) {
@@ -3680,13 +3718,28 @@ const getGithubContributions = ({ username, config = {
             logLevel: logLevels,
             message: `Contribution URLs could not be found. It is possible that Githubs DOM has changed. If you belive this to be the case open an issue at: https://github.com/SammyRobensParadise/github-contributions-counter`
         });
+        return null;
     }
     const rawData = yield collector({
         urlsToQuery: urlsToQuery,
         proxy: requestProxy,
         logs: logLevels
     });
-    return rawData;
+    if (!rawData) {
+        logger({
+            logLevel: logLevels,
+            message: `Data returned is ${typeof rawData}. Expected non-empty array`
+        });
+        return null;
+    }
+    const result = format({ rawData: rawData, partition: config.partition });
+    if (!result) {
+        logger({
+            logLevel: logLevels,
+            message: `Unable to parce data, got result of ${typeof result}`
+        });
+    }
+    return result;
 });
 
 exports.getGithubContributions = getGithubContributions;

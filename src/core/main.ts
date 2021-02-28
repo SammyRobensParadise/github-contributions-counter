@@ -2,18 +2,21 @@ import scraper from './scraper'
 import parcer from './parcer'
 import { logger } from './utils'
 import collector from './collector'
+import format from './formatter'
 export type LogLevels = 'error' | 'warning' | 'none'
+export type Partitions = undefined | 'year' | 'all'
+
 export interface GetGithubContributions {
   username: string
   config?: {
-    partition?: undefined | 'year' | 'all'
+    partition?: Partitions
     proxy?: undefined | string | null
     logs?: LogLevels
   }
 }
 
 export type All = {
-  year: string
+  year: string | (string | null)[]
   contributions: string | null
 }
 
@@ -42,6 +45,7 @@ export const getGithubContributions = async ({
       message:
         'A Github profile could not be fetched. There are likely errors above'
     })
+    return null
   }
   const urlsToQuery = parcer({ webpage: webpage })
   if (!urlsToQuery) {
@@ -49,6 +53,7 @@ export const getGithubContributions = async ({
       logLevel: logLevels,
       message: `Contribution URLs could not be found. It is possible that Githubs DOM has changed. If you belive this to be the case open an issue at: https://github.com/SammyRobensParadise/github-contributions-counter`
     })
+    return null
   }
 
   const rawData = await collector({
@@ -56,5 +61,20 @@ export const getGithubContributions = async ({
     proxy: requestProxy,
     logs: logLevels
   })
-  return rawData
+  if (!rawData) {
+    logger({
+      logLevel: logLevels,
+      message: `Data returned is ${typeof rawData}. Expected non-empty array`
+    })
+    return null
+  }
+
+  const result = format({ rawData: rawData, partition: config.partition })
+  if (!result) {
+    logger({
+      logLevel: logLevels,
+      message: `Unable to parce data, got result of ${typeof result}`
+    })
+  }
+  return result
 }

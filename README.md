@@ -2,143 +2,107 @@
 
 A simple Javascript API that will return the public Github contributions history for a user based on a universal function
 
-
-![githhub-contributions-counter](https://i.ibb.co/tq8VpG9/github-contributions-counter-logo.png) 
-
-<br>
-
-![version](https://img.shields.io/npm/v/github-contributions-counter?style=for-the-badge) 
+![githhub-contributions-counter](https://i.ibb.co/tq8VpG9/github-contributions-counter-logo.png)
 
 <br>
 
-#### A Quick Note 👀
+![version](https://img.shields.io/npm/v/github-contributions-counter?style=for-the-badge)
 
-This was not designed in affiliation with Github, Getting contribution history is not part of their API as of the creation of this package.
+<br>
+
+## A Quick Note 👀
+
+This was not designed in affiliation with Github, Getting contribution history is not part of their API as of the creation of this package. It essentially scrapes information from a Github profile. All within the browser!
 
 ## Getting Started
 
-### Install via [npm github-contributions-counter](https://www.npmjs.com/package/github-contributions-counter)
+### Install
+
+Via NPM
 
 ```bash
-npm install github-contributions-counter
+npm i github-contributions-counter
 ```
+
+Via Yarn
+
+```bash
+yarn add github-contributions-counter
+```
+
 ### Demo
-[Code Sandbox github-contributions-counter](https://codesandbox.io/s/github-contributions-counter-2x0ev?file=/index.html)
 
-### Usage
+[Code Sandbox](https://codesandbox.io/s/github-contributions-counter-2x0ev?file=/index.html)
 
-```js
-// normal js require
-const API = require('github-contributions-counter')
+## Usage
 
-API.getGitHubContributionsHistory('your_username_here', {}).then((response) => {
-  console.log(response)
+```jsx
+import { getGithubContributions } from 'github-contributions-counter'
+// can use a commonjs require as well
+/**
+ *  Can also be used with await
+ */
+getGithubContributions({
+  username: 'github_username',
+  config: { partition: 'current' }
+}).then((r) => {
+  console.log(r)
 })
-/**
- * The expected response is an array of objects of the following:
- *
- * response = [{ annualContributions: "1699" }]
- *
- * */
-
-API.getGitHubContributionsHistory('your_username_here', { total: 'total' }).then((response) => {
-  console.log(response)
-})
-/**
- * The expected response is an array of objects of the following:
- * This is the all time contributions for a user
- * response = [{ totalContributions: '2027' }]
- *
- * */
-
-API.getGitHubContributionsHistory('your_username_here', { total: 'total', byYear: 'byYear' }).then(
-  (response) => {
-    console.log(response)
-  },
-)
-/**
- * The expected response is an array of objects of the following:
- * This is all the contributions by year for a user
- * response = [
- *       { contributions: '768', year: '2020' },
- *       { contributions: '1090', year: '2019' },
- *        { contributions: '167', year: '2018' },
- *       { contributions: '2', year: '2017' }
- *      ]
- *
- * */
-
-API.getGitHubContributionsHistory('your_username_here', {
-  total: 'total',
-  byYear: 'byYear',
-  proxy: 'https://your_proxy_url',
-}).then((response) => {
-  console.log(response)
-})
-/**
- * The expected response is an array of objects of the following:
- * This is all the contributions by year for a user
- * response = [
- *       { contributions: '768', year: '2020' },
- *       { contributions: '1090', year: '2019' },
- *        { contributions: '167', year: '2018' },
- *       { contributions: '2', year: '2017' }
- *      ]
- *
- * */
 ```
-
-Show off your contributions 🤟💻🦾
 
 ## API
 
-```js
-getGitHubContributionsHistory((username: String), (confg: Object)).then((res) => console.log(res))
+### Interface
+
+| Parameter | Description | Status | Type |
+| --- | --- | --- | --- |
+| `username` | A valid github username. Organization names are not currently supported | Required | string |
+| `config` | A optional configuration object named `config` that accepts an optional `partition` type, an optional `proxy` and optional `logs`. | Optional | Object |
+
+### Config
+
+An optional `config` object can be added as a second parameter to customize behavior.
+
+| Key | Description | Default Value | Type |
+| --- | --- | --- | --- |
+| `proxy` | A `string` proxy url. Since data is being scraped from within the browser a proxy is required to handle CORS errors. If no proxy is required a fallback proxy is used. However it is intentionally rate limited to 50 calls every 30 seconds. For this reason, the usage of a custom proxy is recommended. You can follow [this example](https://github.com/Rob--W/cors-anywhere) to quickly standup your own CORS proxy. | `null` | string |
+| `partition` | A `string` partition to upon which to categorize data. - `"year"`: Group contributions by year. - `"all"`: The Sum of all contributions for that user since account creation. - `"current"`: The Current default contributions displayed on the user's Github Profile (the past 365 days). | `"all"` | string |
+| `logs` | A `string` log level that can be specified for log levels. - `"error:`: Throw an `Error` whenever a failure is detected - `"warning"`: Log warnings in the console but do not throw an error - `"none"`: Do not throw any errors or log anything to the console | `"none"` | string |
+
+## Issue Tracker
+
+[Issues](https://github.com/SammyRobensParadise/github-contributions-counter/issues)
+
+## Contributing
+
+Contributions are welcomed and encouraged! Refer to [Contribution Guidelines](docs/CONTRIBUTING.md)
+
+## Development
+
+1. Clone
+
+```bash
+git clone git@github.com:SammyRobensParadise/github-contributions-counter.git
 ```
 
-The API takes two params. The fist is the users `username` as a `string`. The second is a config object. The config object has 3 elements.
+2. Install
 
-```js
-config = {
-  total: 'total',
-  byYear: 'byYear',
-  proxy: 'https://cors-anywhere.herokuapp.com/',
-}
+```bash
+npm install
+# or
+yarn install
 ```
 
-1. total \
-   pass `total: 'total'` to get the total contributions for a user
-2. byYear \
-   pass `byYear: 'byYear'` to get the total contributions for a user sorted by year
-3. proxy \
-   the proxy arg would likely be required if you are using this node package in the browser because of [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS). `proxy` can have 3 possible configurations. If you do not include `proxy` in the config object passed to the function then no proxy will be used. If you pass
-   `proxy: true`
-   in the config object, then the proxy [https://cors-anywhere.herokuapp.com/](https://cors-anywhere.herokuapp.com/) will be used. As a third option, you can also pass your your own proxy as a string such as
-   `proxy: 'https://your-cors-bypass-url.com/'`.
+3. Develop 💻
 
-### Error Handling
+4. Build using `rollup.js`
 
-1. 429: The API should return `429` if there are too many requests
-2. 200: `200` Okay
-3. 400: `400 Bad request`
-4. `{error: javascript error}`
-5. No more than 50 redirects allowed
+```bash
+npm run build
+# or
+yarn run build
+```
 
-### If you are getting CORS errors such as
-![cors-error](https://miro.medium.com/max/1400/0*bI2yxKryqJzyUkud) \
-You probably need to pass a proxy. This can be done by setting `proxy: true` in the config object passed a s second argument to `getGitHubContributionsHistory`
+## Info
 
-### Issues
-
-Given that this API is scraping Github webpages for the desired data, it is a) not the fastest; and b) dependent on the DOM nodes for Github user profiles not changing to a large extent. If it stops working, open an issue on Github and i'll fit it asap! :)
-
-### Contributing
-
-1. Fork
-2. Open Pull request with a detailed note about the changes you have made
-3. It will be reviewed and (hopefully) merged!
-
-### Contact
-
-[Sammy Robens-Paradise | Website](https://sammyrp.com)\
-[Sammy Robens-Paradise | Github](https://github.com/SammyRobensParadise)
+Author: Sammy Robens-Paradise. [sammy.world](https://sammy.world)

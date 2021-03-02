@@ -32,7 +32,7 @@ yarn add github-contributions-counter
 
 ### Demo
 
-[Code Sandbox](https://codesandbox.io/s/github-contributions-counter-2x0ev?file=/index.html)
+[Demo App](https://evening-earth-16974.herokuapp.com/)
 
 ## Usage
 

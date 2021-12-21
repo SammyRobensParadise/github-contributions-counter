@@ -66,8 +66,6 @@ var bind = function bind(fn, thisArg) {
   };
 };
 
-/*global toString:true*/
-
 // utils is a library of generic helper functions non-specific to axios
 
 var toString = Object.prototype.toString;
@@ -251,7 +249,7 @@ function isURLSearchParams(val) {
  * @returns {String} The String freed of excess whitespace
  */
 function trim(str) {
-  return str.replace(/^\s*/, '').replace(/\s*$/, '');
+  return str.trim ? str.trim() : str.replace(/^\s+|\s+$/g, '');
 }
 
 /**
@@ -493,10 +491,12 @@ function InterceptorManager() {
  *
  * @return {Number} An ID used to remove interceptor later
  */
-InterceptorManager.prototype.use = function use(fulfilled, rejected) {
+InterceptorManager.prototype.use = function use(fulfilled, rejected, options) {
   this.handlers.push({
     fulfilled: fulfilled,
-    rejected: rejected
+    rejected: rejected,
+    synchronous: options ? options.synchronous : false,
+    runWhen: options ? options.runWhen : null
   });
   return this.handlers.length - 1;
 };
@@ -529,27 +529,6 @@ InterceptorManager.prototype.forEach = function forEach(fn) {
 };
 
 var InterceptorManager_1 = InterceptorManager;
-
-/**
- * Transform the data for a request or a response
- *
- * @param {Object|String} data The data to be transformed
- * @param {Array} headers The headers for the request or response
- * @param {Array|Function} fns A single function or Array of functions
- * @returns {*} The resulting transformed data
- */
-var transformData = function transformData(data, headers, fns) {
-  /*eslint no-param-reassign:0*/
-  utils.forEach(fns, function transform(fn) {
-    data = fn(data, headers);
-  });
-
-  return data;
-};
-
-var isCancel = function isCancel(value) {
-  return !!(value && value.__CANCEL__);
-};
 
 var normalizeHeaderName = function normalizeHeaderName(headers, normalizedName) {
   utils.forEach(headers, function processHeader(value, name) {
@@ -849,6 +828,7 @@ var xhr = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
     var requestData = config.data;
     var requestHeaders = config.headers;
+    var responseType = config.responseType;
 
     if (utils.isFormData(requestData)) {
       delete requestHeaders['Content-Type']; // Let the browser set it
@@ -869,23 +849,14 @@ var xhr = function xhrAdapter(config) {
     // Set the request timeout in MS
     request.timeout = config.timeout;
 
-    // Listen for ready state
-    request.onreadystatechange = function handleLoad() {
-      if (!request || request.readyState !== 4) {
+    function onloadend() {
+      if (!request) {
         return;
       }
-
-      // The request errored out and we didn't get a response, this will be
-      // handled by onerror instead
-      // With one exception: request that using file: protocol, most browsers
-      // will return status as 0 even though it's a successful request
-      if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
-        return;
-      }
-
       // Prepare the response
       var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
-      var responseData = !config.responseType || config.responseType === 'text' ? request.responseText : request.response;
+      var responseData = !responseType || responseType === 'text' ||  responseType === 'json' ?
+        request.responseText : request.response;
       var response = {
         data: responseData,
         status: request.status,
@@ -899,7 +870,30 @@ var xhr = function xhrAdapter(config) {
 
       // Clean up request
       request = null;
-    };
+    }
+
+    if ('onloadend' in request) {
+      // Use onloadend if available
+      request.onloadend = onloadend;
+    } else {
+      // Listen for ready state to emulate onloadend
+      request.onreadystatechange = function handleLoad() {
+        if (!request || request.readyState !== 4) {
+          return;
+        }
+
+        // The request errored out and we didn't get a response, this will be
+        // handled by onerror instead
+        // With one exception: request that using file: protocol, most browsers
+        // will return status as 0 even though it's a successful request
+        if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
+          return;
+        }
+        // readystate handler is calling before onerror or ontimeout handlers,
+        // so we should call onloadend on the next 'tick'
+        setTimeout(onloadend);
+      };
+    }
 
     // Handle browser request cancellation (as opposed to a manual cancellation)
     request.onabort = function handleAbort() {
@@ -929,7 +923,10 @@ var xhr = function xhrAdapter(config) {
       if (config.timeoutErrorMessage) {
         timeoutErrorMessage = config.timeoutErrorMessage;
       }
-      reject(createError(timeoutErrorMessage, config, 'ECONNABORTED',
+      reject(createError(
+        timeoutErrorMessage,
+        config,
+        config.transitional && config.transitional.clarifyTimeoutError ? 'ETIMEDOUT' : 'ECONNABORTED',
         request));
 
       // Clean up request
@@ -969,16 +966,8 @@ var xhr = function xhrAdapter(config) {
     }
 
     // Add responseType to request if needed
-    if (config.responseType) {
-      try {
-        request.responseType = config.responseType;
-      } catch (e) {
-        // Expected DOMException thrown by browsers not compatible XMLHttpRequest Level 2.
-        // But, this can be suppressed for 'json' type as it can be parsed by default 'transformResponse' function.
-        if (config.responseType !== 'json') {
-          throw e;
-        }
-      }
+    if (responseType && responseType !== 'json') {
+      request.responseType = config.responseType;
     }
 
     // Handle progress if needed
@@ -2134,7 +2123,8 @@ var debug_1 = function () {
       /* eslint global-require: off */
       debug = src("follow-redirects");
     }
-    catch (error) {
+    catch (error) { /* */ }
+    if (typeof debug !== "function") {
       debug = function () { /* */ };
     }
   }
@@ -2149,8 +2139,9 @@ var Writable = require$$0.Writable;
 
 
 // Create handlers that pass events from native requests
+var events = ["abort", "aborted", "connect", "error", "socket", "timeout"];
 var eventHandlers = Object.create(null);
-["abort", "aborted", "connect", "error", "socket", "timeout"].forEach(function (event) {
+events.forEach(function (event) {
   eventHandlers[event] = function (arg1, arg2, arg3) {
     this._redirectable.emit(event, arg1, arg2, arg3);
   };
@@ -2159,7 +2150,7 @@ var eventHandlers = Object.create(null);
 // Error types with codes
 var RedirectionError = createErrorType(
   "ERR_FR_REDIRECTION_FAILURE",
-  ""
+  "Redirected request failed"
 );
 var TooManyRedirectsError = createErrorType(
   "ERR_FR_TOO_MANY_REDIRECTS",
@@ -2202,6 +2193,11 @@ function RedirectableRequest(options, responseCallback) {
   this._performRequest();
 }
 RedirectableRequest.prototype = Object.create(Writable.prototype);
+
+RedirectableRequest.prototype.abort = function () {
+  abortRequest(this._currentRequest);
+  this.emit("abort");
+};
 
 // Writes buffered data to the current native request
 RedirectableRequest.prototype.write = function (data, encoding, callback) {
@@ -2282,40 +2278,72 @@ RedirectableRequest.prototype.removeHeader = function (name) {
 
 // Global timeout for all underlying requests
 RedirectableRequest.prototype.setTimeout = function (msecs, callback) {
-  if (callback) {
-    this.once("timeout", callback);
+  var self = this;
+
+  // Destroys the socket on timeout
+  function destroyOnTimeout(socket) {
+    socket.setTimeout(msecs);
+    socket.removeListener("timeout", socket.destroy);
+    socket.addListener("timeout", socket.destroy);
   }
 
+  // Sets up a timer to trigger a timeout event
+  function startTimer(socket) {
+    if (self._timeout) {
+      clearTimeout(self._timeout);
+    }
+    self._timeout = setTimeout(function () {
+      self.emit("timeout");
+      clearTimer();
+    }, msecs);
+    destroyOnTimeout(socket);
+  }
+
+  // Stops a timeout from triggering
+  function clearTimer() {
+    // Clear the timeout
+    if (self._timeout) {
+      clearTimeout(self._timeout);
+      self._timeout = null;
+    }
+
+    // Clean up all attached listeners
+    self.removeListener("abort", clearTimer);
+    self.removeListener("error", clearTimer);
+    self.removeListener("response", clearTimer);
+    if (callback) {
+      self.removeListener("timeout", callback);
+    }
+    if (!self.socket) {
+      self._currentRequest.removeListener("socket", startTimer);
+    }
+  }
+
+  // Attach callback if passed
+  if (callback) {
+    this.on("timeout", callback);
+  }
+
+  // Start the timer if or when the socket is opened
   if (this.socket) {
-    startTimer(this, msecs);
+    startTimer(this.socket);
   }
   else {
-    var self = this;
-    this._currentRequest.once("socket", function () {
-      startTimer(self, msecs);
-    });
+    this._currentRequest.once("socket", startTimer);
   }
 
-  this.once("response", clearTimer);
-  this.once("error", clearTimer);
+  // Clean up on events
+  this.on("socket", destroyOnTimeout);
+  this.on("abort", clearTimer);
+  this.on("error", clearTimer);
+  this.on("response", clearTimer);
 
   return this;
 };
 
-function startTimer(request, msecs) {
-  clearTimeout(request._timeout);
-  request._timeout = setTimeout(function () {
-    request.emit("timeout");
-  }, msecs);
-}
-
-function clearTimer() {
-  clearTimeout(this._timeout);
-}
-
 // Proxy all other public ClientRequest methods
 [
-  "abort", "flushHeaders", "getHeader",
+  "flushHeaders", "getHeader",
   "setNoDelay", "setSocketKeepAlive",
 ].forEach(function (method) {
   RedirectableRequest.prototype[method] = function (a, b) {
@@ -2385,11 +2413,8 @@ RedirectableRequest.prototype._performRequest = function () {
 
   // Set up event handlers
   request._redirectable = this;
-  for (var event in eventHandlers) {
-    /* istanbul ignore else */
-    if (event) {
-      request.on(event, eventHandlers[event]);
-    }
+  for (var e = 0; e < events.length; e++) {
+    request.on(events[e], eventHandlers[events[e]]);
   }
 
   // End a redirected request
@@ -2447,9 +2472,7 @@ RedirectableRequest.prototype._processResponse = function (response) {
   if (location && this._options.followRedirects !== false &&
       statusCode >= 300 && statusCode < 400) {
     // Abort the current request
-    this._currentRequest.removeAllListeners();
-    this._currentRequest.on("error", noop);
-    this._currentRequest.abort();
+    abortRequest(this._currentRequest);
     // Discard the remainder of the response to avoid waiting for data
     response.destroy();
 
@@ -2477,18 +2500,32 @@ RedirectableRequest.prototype._processResponse = function (response) {
     }
 
     // Drop the Host header, as the redirect might lead to a different host
-    var previousHostName = removeMatchingHeaders(/^host$/i, this._options.headers) ||
-      url.parse(this._currentUrl).hostname;
+    var currentHostHeader = removeMatchingHeaders(/^host$/i, this._options.headers);
+
+    // If the redirect is relative, carry over the host of the last request
+    var currentUrlParts = url.parse(this._currentUrl);
+    var currentHost = currentHostHeader || currentUrlParts.host;
+    var currentUrl = /^\w+:/.test(location) ? this._currentUrl :
+      url.format(Object.assign(currentUrlParts, { host: currentHost }));
+
+    // Determine the URL of the redirection
+    var redirectUrl;
+    try {
+      redirectUrl = url.resolve(currentUrl, location);
+    }
+    catch (cause) {
+      this.emit("error", new RedirectionError(cause));
+      return;
+    }
 
     // Create the redirected request
-    var redirectUrl = url.resolve(this._currentUrl, location);
     debug_1("redirecting to", redirectUrl);
     this._isRedirect = true;
     var redirectUrlParts = url.parse(redirectUrl);
     Object.assign(this._options, redirectUrlParts);
 
-    // Drop the Authorization header if redirecting to another host
-    if (redirectUrlParts.hostname !== previousHostName) {
+    // Drop the Authorization header if redirecting to another domain
+    if (!(redirectUrlParts.host === currentHost || isSubdomainOf(redirectUrlParts.host, currentHost))) {
       removeMatchingHeaders(/^authorization$/i, this._options.headers);
     }
 
@@ -2510,9 +2547,7 @@ RedirectableRequest.prototype._processResponse = function (response) {
       this._performRequest();
     }
     catch (cause) {
-      var error = new RedirectionError("Redirected request failed: " + cause.message);
-      error.cause = cause;
-      this.emit("error", error);
+      this.emit("error", new RedirectionError(cause));
     }
   }
   else {
@@ -2626,13 +2661,20 @@ function removeMatchingHeaders(regex, headers) {
       delete headers[header];
     }
   }
-  return lastValue;
+  return (lastValue === null || typeof lastValue === "undefined") ?
+    undefined : String(lastValue).trim();
 }
 
 function createErrorType(code, defaultMessage) {
-  function CustomError(message) {
+  function CustomError(cause) {
     Error.captureStackTrace(this, this.constructor);
-    this.message = message || defaultMessage;
+    if (!cause) {
+      this.message = defaultMessage;
+    }
+    else {
+      this.message = defaultMessage + ": " + cause.message;
+      this.cause = cause;
+    }
   }
   CustomError.prototype = new Error();
   CustomError.prototype.constructor = CustomError;
@@ -2641,30 +2683,106 @@ function createErrorType(code, defaultMessage) {
   return CustomError;
 }
 
+function abortRequest(request) {
+  for (var e = 0; e < events.length; e++) {
+    request.removeListener(events[e], eventHandlers[events[e]]);
+  }
+  request.on("error", noop);
+  request.abort();
+}
+
+function isSubdomainOf(subdomain, domain) {
+  const dot = subdomain.length - domain.length - 1;
+  return dot > 0 && subdomain[dot] === "." && subdomain.endsWith(domain);
+}
+
 // Exports
 var followRedirects = wrap({ http: http, https: https });
 var wrap_1 = wrap;
 followRedirects.wrap = wrap_1;
 
-var name = "axios";
-var version = "0.21.1";
+var _from = "axios@^0.21.2";
+var _id = "axios@0.21.4";
+var _inBundle = false;
+var _integrity = "sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==";
+var _location = "/axios";
+var _phantomChildren = {
+};
+var _requested = {
+	type: "range",
+	registry: true,
+	raw: "axios@^0.21.2",
+	name: "axios",
+	escapedName: "axios",
+	rawSpec: "^0.21.2",
+	saveSpec: null,
+	fetchSpec: "^0.21.2"
+};
+var _requiredBy = [
+	"/"
+];
+var _resolved = "https://registry.npmjs.org/axios/-/axios-0.21.4.tgz";
+var _shasum = "c67b90dc0568e5c1cf2b0b858c43ba28e2eda575";
+var _spec = "axios@^0.21.2";
+var _where = "/Users/sammyrobens-paradise/projects/github-contributions-counter";
+var author = {
+	name: "Matt Zabriskie"
+};
+var browser$1 = {
+	"./lib/adapters/http.js": "./lib/adapters/xhr.js"
+};
+var bugs = {
+	url: "https://github.com/axios/axios/issues"
+};
+var bundleDependencies = false;
+var bundlesize = [
+	{
+		path: "./dist/axios.min.js",
+		threshold: "5kB"
+	}
+];
+var dependencies = {
+	"follow-redirects": "^1.14.0"
+};
+var deprecated = false;
 var description = "Promise based HTTP client for the browser and node.js";
-var main = "index.js";
-var scripts = {
-	test: "grunt test && bundlesize",
-	start: "node ./sandbox/server.js",
-	build: "NODE_ENV=production grunt build",
-	preversion: "npm test",
-	version: "npm run build && grunt version && git add -A dist && git add CHANGELOG.md bower.json package.json",
-	postversion: "git push && git push --tags",
-	examples: "node ./examples/server.js",
-	coveralls: "cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-	fix: "eslint --fix lib/**/*.js"
+var devDependencies = {
+	coveralls: "^3.0.0",
+	"es6-promise": "^4.2.4",
+	grunt: "^1.3.0",
+	"grunt-banner": "^0.6.0",
+	"grunt-cli": "^1.2.0",
+	"grunt-contrib-clean": "^1.1.0",
+	"grunt-contrib-watch": "^1.0.0",
+	"grunt-eslint": "^23.0.0",
+	"grunt-karma": "^4.0.0",
+	"grunt-mocha-test": "^0.13.3",
+	"grunt-ts": "^6.0.0-beta.19",
+	"grunt-webpack": "^4.0.2",
+	"istanbul-instrumenter-loader": "^1.0.0",
+	"jasmine-core": "^2.4.1",
+	karma: "^6.3.2",
+	"karma-chrome-launcher": "^3.1.0",
+	"karma-firefox-launcher": "^2.1.0",
+	"karma-jasmine": "^1.1.1",
+	"karma-jasmine-ajax": "^0.1.13",
+	"karma-safari-launcher": "^1.0.0",
+	"karma-sauce-launcher": "^4.3.6",
+	"karma-sinon": "^1.0.5",
+	"karma-sourcemap-loader": "^0.3.8",
+	"karma-webpack": "^4.0.2",
+	"load-grunt-tasks": "^3.5.2",
+	minimist: "^1.2.0",
+	mocha: "^8.2.1",
+	sinon: "^4.5.0",
+	"terser-webpack-plugin": "^4.2.3",
+	typescript: "^4.0.5",
+	"url-search-params": "^0.10.0",
+	webpack: "^4.44.2",
+	"webpack-dev-server": "^3.11.0"
 };
-var repository = {
-	type: "git",
-	url: "https://github.com/axios/axios.git"
-};
+var homepage = "https://axios-http.com";
+var jsdelivr = "dist/axios.min.js";
 var keywords = [
 	"xhr",
 	"http",
@@ -2672,83 +2790,60 @@ var keywords = [
 	"promise",
 	"node"
 ];
-var author = "Matt Zabriskie";
 var license = "MIT";
-var bugs = {
-	url: "https://github.com/axios/axios/issues"
+var main = "index.js";
+var name = "axios";
+var repository = {
+	type: "git",
+	url: "git+https://github.com/axios/axios.git"
 };
-var homepage = "https://github.com/axios/axios";
-var devDependencies = {
-	bundlesize: "^0.17.0",
-	coveralls: "^3.0.0",
-	"es6-promise": "^4.2.4",
-	grunt: "^1.0.2",
-	"grunt-banner": "^0.6.0",
-	"grunt-cli": "^1.2.0",
-	"grunt-contrib-clean": "^1.1.0",
-	"grunt-contrib-watch": "^1.0.0",
-	"grunt-eslint": "^20.1.0",
-	"grunt-karma": "^2.0.0",
-	"grunt-mocha-test": "^0.13.3",
-	"grunt-ts": "^6.0.0-beta.19",
-	"grunt-webpack": "^1.0.18",
-	"istanbul-instrumenter-loader": "^1.0.0",
-	"jasmine-core": "^2.4.1",
-	karma: "^1.3.0",
-	"karma-chrome-launcher": "^2.2.0",
-	"karma-coverage": "^1.1.1",
-	"karma-firefox-launcher": "^1.1.0",
-	"karma-jasmine": "^1.1.1",
-	"karma-jasmine-ajax": "^0.1.13",
-	"karma-opera-launcher": "^1.0.0",
-	"karma-safari-launcher": "^1.0.0",
-	"karma-sauce-launcher": "^1.2.0",
-	"karma-sinon": "^1.0.5",
-	"karma-sourcemap-loader": "^0.3.7",
-	"karma-webpack": "^1.7.0",
-	"load-grunt-tasks": "^3.5.2",
-	minimist: "^1.2.0",
-	mocha: "^5.2.0",
-	sinon: "^4.5.0",
-	typescript: "^2.8.1",
-	"url-search-params": "^0.10.0",
-	webpack: "^1.13.1",
-	"webpack-dev-server": "^1.14.1"
+var scripts = {
+	build: "NODE_ENV=production grunt build",
+	coveralls: "cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+	examples: "node ./examples/server.js",
+	fix: "eslint --fix lib/**/*.js",
+	postversion: "git push && git push --tags",
+	preversion: "npm test",
+	start: "node ./sandbox/server.js",
+	test: "grunt test",
+	version: "npm run build && grunt version && git add -A dist && git add CHANGELOG.md bower.json package.json"
 };
-var browser$1 = {
-	"./lib/adapters/http.js": "./lib/adapters/xhr.js"
-};
-var jsdelivr = "dist/axios.min.js";
-var unpkg = "dist/axios.min.js";
 var typings = "./index.d.ts";
-var dependencies = {
-	"follow-redirects": "^1.10.0"
-};
-var bundlesize = [
-	{
-		path: "./dist/axios.min.js",
-		threshold: "5kB"
-	}
-];
+var unpkg = "dist/axios.min.js";
+var version = "0.21.4";
 var pkg = {
-	name: name,
-	version: version,
-	description: description,
-	main: main,
-	scripts: scripts,
-	repository: repository,
-	keywords: keywords,
+	_from: _from,
+	_id: _id,
+	_inBundle: _inBundle,
+	_integrity: _integrity,
+	_location: _location,
+	_phantomChildren: _phantomChildren,
+	_requested: _requested,
+	_requiredBy: _requiredBy,
+	_resolved: _resolved,
+	_shasum: _shasum,
+	_spec: _spec,
+	_where: _where,
 	author: author,
-	license: license,
-	bugs: bugs,
-	homepage: homepage,
-	devDependencies: devDependencies,
 	browser: browser$1,
-	jsdelivr: jsdelivr,
-	unpkg: unpkg,
-	typings: typings,
+	bugs: bugs,
+	bundleDependencies: bundleDependencies,
+	bundlesize: bundlesize,
 	dependencies: dependencies,
-	bundlesize: bundlesize
+	deprecated: deprecated,
+	description: description,
+	devDependencies: devDependencies,
+	homepage: homepage,
+	jsdelivr: jsdelivr,
+	keywords: keywords,
+	license: license,
+	main: main,
+	name: name,
+	repository: repository,
+	scripts: scripts,
+	typings: typings,
+	unpkg: unpkg,
+	version: version
 };
 
 var httpFollow = followRedirects.http;
@@ -2799,9 +2894,16 @@ var http_1 = function httpAdapter(config) {
     var headers = config.headers;
 
     // Set User-Agent (required by some servers)
-    // Only set header if it hasn't been set in config
     // See https://github.com/axios/axios/issues/69
-    if (!headers['User-Agent'] && !headers['user-agent']) {
+    if ('User-Agent' in headers || 'user-agent' in headers) {
+      // User-Agent is specified; handle case where no UA header is desired
+      if (!headers['User-Agent'] && !headers['user-agent']) {
+        delete headers['User-Agent'];
+        delete headers['user-agent'];
+      }
+      // Otherwise, use specified value
+    } else {
+      // Only set header if it hasn't been set in config
       headers['User-Agent'] = 'axios/' + pkg.version;
     }
 
@@ -2974,11 +3076,13 @@ var http_1 = function httpAdapter(config) {
         settle(resolve, reject, response);
       } else {
         var responseBuffer = [];
+        var totalResponseBytes = 0;
         stream.on('data', function handleStreamData(chunk) {
           responseBuffer.push(chunk);
+          totalResponseBytes += chunk.length;
 
           // make sure the content length is not over the maxContentLength if specified
-          if (config.maxContentLength > -1 && Buffer.concat(responseBuffer).length > config.maxContentLength) {
+          if (config.maxContentLength > -1 && totalResponseBytes > config.maxContentLength) {
             stream.destroy();
             reject(createError('maxContentLength size of ' + config.maxContentLength + ' exceeded',
               config, null, lastRequest));
@@ -3013,14 +3117,33 @@ var http_1 = function httpAdapter(config) {
 
     // Handle request timeout
     if (config.timeout) {
+      // This is forcing a int timeout to avoid problems if the `req` interface doesn't handle other types.
+      var timeout = parseInt(config.timeout, 10);
+
+      if (isNaN(timeout)) {
+        reject(createError(
+          'error trying to parse `config.timeout` to int',
+          config,
+          'ERR_PARSE_TIMEOUT',
+          req
+        ));
+
+        return;
+      }
+
       // Sometime, the response will be very slow, and does not respond, the connect event will be block by event loop system.
       // And timer callback will be fired, and abort() will be invoked before connection, then get "socket hang up" and code ECONNRESET.
       // At this time, if we have a large number of request, nodejs will hang up some socket on background. and the number will up and up.
       // And then these socket which be hang up will devoring CPU little by little.
       // ClientRequest.setTimeout will be fired on the specify milliseconds, and can make sure that abort() will be fired after connect.
-      req.setTimeout(config.timeout, function handleRequestTimeout() {
+      req.setTimeout(timeout, function handleRequestTimeout() {
         req.abort();
-        reject(createError('timeout of ' + config.timeout + 'ms exceeded', config, 'ECONNABORTED', req));
+        reject(createError(
+          'timeout of ' + timeout + 'ms exceeded',
+          config,
+          config.transitional && config.transitional.clarifyTimeoutError ? 'ETIMEDOUT' : 'ECONNABORTED',
+          req
+        ));
       });
     }
 
@@ -3067,12 +3190,35 @@ function getDefaultAdapter() {
   return adapter;
 }
 
+function stringifySafely(rawValue, parser, encoder) {
+  if (utils.isString(rawValue)) {
+    try {
+      (parser || JSON.parse)(rawValue);
+      return utils.trim(rawValue);
+    } catch (e) {
+      if (e.name !== 'SyntaxError') {
+        throw e;
+      }
+    }
+  }
+
+  return (encoder || JSON.stringify)(rawValue);
+}
+
 var defaults = {
+
+  transitional: {
+    silentJSONParsing: true,
+    forcedJSONParsing: true,
+    clarifyTimeoutError: false
+  },
+
   adapter: getDefaultAdapter(),
 
   transformRequest: [function transformRequest(data, headers) {
     normalizeHeaderName(headers, 'Accept');
     normalizeHeaderName(headers, 'Content-Type');
+
     if (utils.isFormData(data) ||
       utils.isArrayBuffer(data) ||
       utils.isBuffer(data) ||
@@ -3089,20 +3235,32 @@ var defaults = {
       setContentTypeIfUnset(headers, 'application/x-www-form-urlencoded;charset=utf-8');
       return data.toString();
     }
-    if (utils.isObject(data)) {
-      setContentTypeIfUnset(headers, 'application/json;charset=utf-8');
-      return JSON.stringify(data);
+    if (utils.isObject(data) || (headers && headers['Content-Type'] === 'application/json')) {
+      setContentTypeIfUnset(headers, 'application/json');
+      return stringifySafely(data);
     }
     return data;
   }],
 
   transformResponse: [function transformResponse(data) {
-    /*eslint no-param-reassign:0*/
-    if (typeof data === 'string') {
+    var transitional = this.transitional;
+    var silentJSONParsing = transitional && transitional.silentJSONParsing;
+    var forcedJSONParsing = transitional && transitional.forcedJSONParsing;
+    var strictJSONParsing = !silentJSONParsing && this.responseType === 'json';
+
+    if (strictJSONParsing || (forcedJSONParsing && utils.isString(data) && data.length)) {
       try {
-        data = JSON.parse(data);
-      } catch (e) { /* Ignore */ }
+        return JSON.parse(data);
+      } catch (e) {
+        if (strictJSONParsing) {
+          if (e.name === 'SyntaxError') {
+            throw enhanceError(e, this, 'E_JSON_PARSE');
+          }
+          throw e;
+        }
+      }
     }
+
     return data;
   }],
 
@@ -3140,6 +3298,28 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 var defaults_1 = defaults;
 
 /**
+ * Transform the data for a request or a response
+ *
+ * @param {Object|String} data The data to be transformed
+ * @param {Array} headers The headers for the request or response
+ * @param {Array|Function} fns A single function or Array of functions
+ * @returns {*} The resulting transformed data
+ */
+var transformData = function transformData(data, headers, fns) {
+  var context = this || defaults_1;
+  /*eslint no-param-reassign:0*/
+  utils.forEach(fns, function transform(fn) {
+    data = fn.call(context, data, headers);
+  });
+
+  return data;
+};
+
+var isCancel = function isCancel(value) {
+  return !!(value && value.__CANCEL__);
+};
+
+/**
  * Throws a `Cancel` if cancellation has been requested.
  */
 function throwIfCancellationRequested(config) {
@@ -3161,7 +3341,8 @@ var dispatchRequest = function dispatchRequest(config) {
   config.headers = config.headers || {};
 
   // Transform request data
-  config.data = transformData(
+  config.data = transformData.call(
+    config,
     config.data,
     config.headers,
     config.transformRequest
@@ -3187,7 +3368,8 @@ var dispatchRequest = function dispatchRequest(config) {
     throwIfCancellationRequested(config);
 
     // Transform response data
-    response.data = transformData(
+    response.data = transformData.call(
+      config,
       response.data,
       response.headers,
       config.transformResponse
@@ -3200,7 +3382,8 @@ var dispatchRequest = function dispatchRequest(config) {
 
       // Transform response data
       if (reason && reason.response) {
-        reason.response.data = transformData(
+        reason.response.data = transformData.call(
+          config,
           reason.response.data,
           reason.response.headers,
           config.transformResponse
@@ -3296,6 +3479,109 @@ var mergeConfig = function mergeConfig(config1, config2) {
   return config;
 };
 
+var validators = {};
+
+// eslint-disable-next-line func-names
+['object', 'boolean', 'number', 'function', 'string', 'symbol'].forEach(function(type, i) {
+  validators[type] = function validator(thing) {
+    return typeof thing === type || 'a' + (i < 1 ? 'n ' : ' ') + type;
+  };
+});
+
+var deprecatedWarnings = {};
+var currentVerArr = pkg.version.split('.');
+
+/**
+ * Compare package versions
+ * @param {string} version
+ * @param {string?} thanVersion
+ * @returns {boolean}
+ */
+function isOlderVersion(version, thanVersion) {
+  var pkgVersionArr = thanVersion ? thanVersion.split('.') : currentVerArr;
+  var destVer = version.split('.');
+  for (var i = 0; i < 3; i++) {
+    if (pkgVersionArr[i] > destVer[i]) {
+      return true;
+    } else if (pkgVersionArr[i] < destVer[i]) {
+      return false;
+    }
+  }
+  return false;
+}
+
+/**
+ * Transitional option validator
+ * @param {function|boolean?} validator
+ * @param {string?} version
+ * @param {string} message
+ * @returns {function}
+ */
+validators.transitional = function transitional(validator, version, message) {
+  var isDeprecated = version && isOlderVersion(version);
+
+  function formatMessage(opt, desc) {
+    return '[Axios v' + pkg.version + '] Transitional option \'' + opt + '\'' + desc + (message ? '. ' + message : '');
+  }
+
+  // eslint-disable-next-line func-names
+  return function(value, opt, opts) {
+    if (validator === false) {
+      throw new Error(formatMessage(opt, ' has been removed in ' + version));
+    }
+
+    if (isDeprecated && !deprecatedWarnings[opt]) {
+      deprecatedWarnings[opt] = true;
+      // eslint-disable-next-line no-console
+      console.warn(
+        formatMessage(
+          opt,
+          ' has been deprecated since v' + version + ' and will be removed in the near future'
+        )
+      );
+    }
+
+    return validator ? validator(value, opt, opts) : true;
+  };
+};
+
+/**
+ * Assert object's properties type
+ * @param {object} options
+ * @param {object} schema
+ * @param {boolean?} allowUnknown
+ */
+
+function assertOptions(options, schema, allowUnknown) {
+  if (typeof options !== 'object') {
+    throw new TypeError('options must be an object');
+  }
+  var keys = Object.keys(options);
+  var i = keys.length;
+  while (i-- > 0) {
+    var opt = keys[i];
+    var validator = schema[opt];
+    if (validator) {
+      var value = options[opt];
+      var result = value === undefined || validator(value, opt, options);
+      if (result !== true) {
+        throw new TypeError('option ' + opt + ' must be ' + result);
+      }
+      continue;
+    }
+    if (allowUnknown !== true) {
+      throw Error('Unknown option ' + opt);
+    }
+  }
+}
+
+var validator = {
+  isOlderVersion: isOlderVersion,
+  assertOptions: assertOptions,
+  validators: validators
+};
+
+var validators$1 = validator.validators;
 /**
  * Create a new instance of Axios
  *
@@ -3335,20 +3621,71 @@ Axios.prototype.request = function request(config) {
     config.method = 'get';
   }
 
-  // Hook up interceptors middleware
-  var chain = [dispatchRequest, undefined];
-  var promise = Promise.resolve(config);
+  var transitional = config.transitional;
 
+  if (transitional !== undefined) {
+    validator.assertOptions(transitional, {
+      silentJSONParsing: validators$1.transitional(validators$1.boolean, '1.0.0'),
+      forcedJSONParsing: validators$1.transitional(validators$1.boolean, '1.0.0'),
+      clarifyTimeoutError: validators$1.transitional(validators$1.boolean, '1.0.0')
+    }, false);
+  }
+
+  // filter out skipped interceptors
+  var requestInterceptorChain = [];
+  var synchronousRequestInterceptors = true;
   this.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor) {
-    chain.unshift(interceptor.fulfilled, interceptor.rejected);
+    if (typeof interceptor.runWhen === 'function' && interceptor.runWhen(config) === false) {
+      return;
+    }
+
+    synchronousRequestInterceptors = synchronousRequestInterceptors && interceptor.synchronous;
+
+    requestInterceptorChain.unshift(interceptor.fulfilled, interceptor.rejected);
   });
 
+  var responseInterceptorChain = [];
   this.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
-    chain.push(interceptor.fulfilled, interceptor.rejected);
+    responseInterceptorChain.push(interceptor.fulfilled, interceptor.rejected);
   });
 
-  while (chain.length) {
-    promise = promise.then(chain.shift(), chain.shift());
+  var promise;
+
+  if (!synchronousRequestInterceptors) {
+    var chain = [dispatchRequest, undefined];
+
+    Array.prototype.unshift.apply(chain, requestInterceptorChain);
+    chain = chain.concat(responseInterceptorChain);
+
+    promise = Promise.resolve(config);
+    while (chain.length) {
+      promise = promise.then(chain.shift(), chain.shift());
+    }
+
+    return promise;
+  }
+
+
+  var newConfig = config;
+  while (requestInterceptorChain.length) {
+    var onFulfilled = requestInterceptorChain.shift();
+    var onRejected = requestInterceptorChain.shift();
+    try {
+      newConfig = onFulfilled(newConfig);
+    } catch (error) {
+      onRejected(error);
+      break;
+    }
+  }
+
+  try {
+    promise = dispatchRequest(newConfig);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+
+  while (responseInterceptorChain.length) {
+    promise = promise.then(responseInterceptorChain.shift(), responseInterceptorChain.shift());
   }
 
   return promise;

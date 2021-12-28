@@ -2,7 +2,7 @@
 
 A simple Javascript API that will return the public Github contributions history for a user based on a universal function
 
-![githhub-contributions-counter](https://i.ibb.co/tq8VpG9/github-contributions-counter-logo.png)
+![github-contributions-counter](https://i.ibb.co/tq8VpG9/github-contributions-counter-logo.png)
 
 <br>
 
@@ -12,19 +12,19 @@ A simple Javascript API that will return the public Github contributions history
 
 ## A Quick Note 👀
 
-This was not designed in affiliation with Github, Getting contribution history is not part of their API as of the creation of this package. It essentially scrapes information from a Github profile. All within the browser!
+This is a simple REST API wrapper around GitHubs API/V4 contributions graphQL api. Prior to the implementation of the V4 api this package scraped contribution data from GitHub profiles.
 
 ## Getting Started
 
 ### Install
 
-Via NPM
+Via `npm`
 
 ```bash
 npm i github-contributions-counter
 ```
 
-Via Yarn
+Via `yarn`
 
 ```bash
 yarn add github-contributions-counter
@@ -32,19 +32,16 @@ yarn add github-contributions-counter
 
 ### Demo
 
-[Demo App](https://evening-earth-16974.herokuapp.com/)
+[Demo](https://sammy.world/github-stats)
 
 ## Usage
 
 ```jsx
 import { getGithubContributions } from 'github-contributions-counter'
-// can use a commonjs require as well
-/**
- *  Can also be used with await
- */
+
 getGithubContributions({
   username: 'github_username',
-  config: { partition: 'current' }
+  token: 'github_token' // secret
 }).then((r) => {
   console.log(r)
 })
@@ -56,18 +53,8 @@ getGithubContributions({
 
 | Parameter | Description | Status | Type |
 | --- | --- | --- | --- |
-| `username` | A valid github username. Organization names are not currently supported | Required | string |
-| `config` | A optional configuration object named `config` that accepts an optional `partition` type, an optional `proxy` and optional `logs`. | Optional | Object |
-
-### Config
-
-An optional `config` object can be added as a second parameter to customize behavior.
-
-| Key | Description | Default Value | Type |
-| --- | --- | --- | --- |
-| `proxy` | A `string` proxy url. Since data is being scraped from within the browser a proxy is required to handle CORS errors. If no proxy is required a fallback proxy is used. However it is intentionally rate limited to 50 calls every 30 seconds. For this reason, the usage of a custom proxy is recommended. You can follow [this example](https://github.com/Rob--W/cors-anywhere) to quickly standup your own CORS proxy. | `null` | string |
-| `partition` | A `string` partition to upon which to categorize data. - `"year"`: Group contributions by year. - `"all"`: The Sum of all contributions for that user since account creation. - `"current"`: The Current default contributions displayed on the user's Github Profile (the past 365 days). | `"all"` | string |
-| `logs` | A `string` log level that can be specified for log levels. - `"error:`: Throw an `Error` whenever a failure is detected - `"warning"`: Log warnings in the console but do not throw an error - `"none"`: Do not throw any errors or log anything to the console | `"none"` | string |
+| `username` | A valid GitHub username. Organization names are not currently supported | Required | string |
+| `token` | A valid GitHub PAT with `read:usr` permissions. You can find instructions on how to generate a PAT [here](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). | Required | string |
 
 ## Issue Tracker
 

@@ -3,8 +3,5 @@ interface Format {
     rawData: Array<All | null>;
     partition: Partitions;
 }
-declare const format: ({ rawData, partition }: Format) => (All | null)[] | {
-    contributions: string | null;
-    year: (string | (string | null)[] | undefined)[] | null;
-}[] | null;
+declare const format: ({ rawData, partition }: Format) => any[] | null;
 export default format;

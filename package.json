@@ -1,6 +1,6 @@
 {
   "name": "github-contributions-counter",
-  "version": "2.0.5",
+  "version": "2.1.0",
   "description": "A simple Javascript API that will return the public github contributions history for a user based on a universal function",
   "main": "./dist/index.js",
   "module": "./dist/index.es.js",
@@ -35,7 +35,7 @@
     "@babel/core": "^7.12.13",
     "@rollup/plugin-commonjs": "^17.1.0",
     "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^11.1.1",
+    "@rollup/plugin-node-resolve": "^11.2.1",
     "@rollup/plugin-replace": "^2.4.1",
     "@rollup/plugin-url": "^6.0.0",
     "@tsconfig/recommended": "^1.0.1",

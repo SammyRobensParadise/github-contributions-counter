@@ -49,29 +49,6 @@ function __awaiter(thisArg, _arguments, P, generator) {
     });
 }
 
-function __values(o) {
-    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-    if (m) return m.call(o);
-    if (o && typeof o.length === "number") return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
-    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
-}
-
-function __asyncValues(o) {
-    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
-    var m = o[Symbol.asyncIterator], i;
-    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
-    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
-    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
-}
-
-const githubRootURL = 'https://github.com';
-const corsProxy = 'https://glacial-citadel-92798.herokuapp.com';
-
 var bind = function bind(fn, thisArg) {
   return function wrap() {
     var args = new Array(arguments.length);
@@ -3897,200 +3874,42 @@ axios_1.default = _default;
 
 var axios$1 = axios_1;
 
-const logger = ({ logLevel = 'warning', message = 'An unknown Error Occured' }) => {
-    switch (logLevel) {
-        case 'warning':
-            console.warn(message);
-            break;
-        case 'error':
-            throw new Error(message);
+const getGithubContributions = ({ username, token }) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!username || !token) {
+        throw new Error('You must provide a github username and token');
     }
-};
-
-const scraper = ({ username, proxy, logs }) => __awaiter(void 0, void 0, void 0, function* () {
-    const githubUrl = `${githubRootURL}/${username}`;
-    const fetchURL = proxy ? `${proxy}/${githubUrl}` : `${corsProxy}/${githubUrl}`;
-    const res = yield axios$1({
-        method: 'get',
-        url: fetchURL,
-        responseType: 'text',
-        headers: {
-            'Access-Control-Allow-Origin': '*'
-        }
-    });
-    if (res.status !== 200) {
-        logger({
-            logLevel: logs,
-            message: `Status code ${res.status.toString()}. This is likely a problem with the proxy or the u`
-        });
-    }
-    return res.data;
-});
-
-const jsdom = require('jsdom');
-const { jsdom: JSDOM } = jsdom;
-const parcer = ({ webpage, partitions, username }) => {
-    const dom = new JSDOM(webpage, { runScripts: 'dangerously' });
-    if (partitions === 'current') {
-        return [
-            {
-                url: `${githubRootURL}/${username}`,
-                year: 'current'
+    const headers = {
+        Authorization: `bearer ${token}`
+    };
+    const body = {
+        query: `query {
+        user(login: "${username}") {
+          name
+          contributionsCollection {
+            contributionCalendar {
+              colors
+              totalContributions
+              weeks {
+                contributionDays {
+                  color
+                  contributionCount
+                  date
+                  weekday
+                }
+                firstDay
+              }
             }
-        ];
-    }
-    const els = dom.querySelectorAll("a[id*='year-link']");
-    if (!els.length) {
-        return null;
-    }
-    const urls = Array.from(els).map((e) => {
-        return { url: `${githubRootURL}${e.href}`, year: e.innerHTML };
+          }
+        }
+      }`
+    };
+    const response = yield axios$1({
+        url: 'https://api.github.com/graphql',
+        method: 'post',
+        data: { query: body.query },
+        headers
     });
-    return urls;
-};
-
-const jsdom$1 = require('jsdom');
-const { jsdom: JSDOM$1 } = jsdom$1;
-const collector = ({ urlsToQuery, proxy, logs }) => { var urlsToQuery_1, urlsToQuery_1_1; return __awaiter(void 0, void 0, void 0, function* () {
-    var e_1, _a;
-    let data = [];
-    if (!urlsToQuery) {
-        return data;
-    }
-    try {
-        for (urlsToQuery_1 = __asyncValues(urlsToQuery); urlsToQuery_1_1 = yield urlsToQuery_1.next(), !urlsToQuery_1_1.done;) {
-            const o = urlsToQuery_1_1.value;
-            const fetchURL = proxy ? `${proxy}/${o.url}` : `${corsProxy}/${o.url}`;
-            const res = yield axios$1({
-                method: 'get',
-                url: fetchURL,
-                responseType: 'text',
-                headers: {
-                    'Access-Control-Allow-Origin': '*'
-                }
-            });
-            if (res.status !== 200) {
-                logger({
-                    logLevel: logs,
-                    message: 'Failed to fetch contributions urls...'
-                });
-            }
-            const dom = new JSDOM$1(res.data);
-            const candidates = Array.from(dom.querySelectorAll('h2'));
-            const candidate = candidates.filter((c) => c.innerHTML.toString().includes('contributions'))[0].innerHTML;
-            const cleanCandidate = candidate === null || candidate === void 0 ? void 0 : candidate.replace(/,/g, '');
-            const temp = cleanCandidate.match(/\d+/);
-            const amount = temp ? temp[0] : null;
-            const blob = {
-                year: o.year,
-                contributions: amount
-            };
-            data.push(blob);
-        }
-    }
-    catch (e_1_1) { e_1 = { error: e_1_1 }; }
-    finally {
-        try {
-            if (urlsToQuery_1_1 && !urlsToQuery_1_1.done && (_a = urlsToQuery_1.return)) yield _a.call(urlsToQuery_1);
-        }
-        finally { if (e_1) throw e_1.error; }
-    }
-    return data;
-}); };
-
-const format = ({ rawData, partition }) => {
-    var _a;
-    let formattedData;
-    const data = rawData;
-    switch (partition) {
-        case 'year': {
-            formattedData = data;
-            break;
-        }
-        case 'current': {
-            formattedData = data;
-        }
-        case 'all': {
-            const years = data.map((e) => {
-                return e === null || e === void 0 ? void 0 : e.year;
-            });
-            const contribs = data.map((e) => {
-                if (typeof (e === null || e === void 0 ? void 0 : e.contributions) === 'string') {
-                    return parseInt(e === null || e === void 0 ? void 0 : e.contributions);
-                }
-            });
-            const totalContribs = (_a = contribs.reduce((a, b) => a + b, 0)) === null || _a === void 0 ? void 0 : _a.toString();
-            const blob = [
-                {
-                    contributions: totalContribs ? totalContribs : null,
-                    year: years ? years : null
-                }
-            ];
-            formattedData = blob ? blob : null;
-            break;
-        }
-        default: {
-            formattedData = data;
-            break;
-        }
-    }
-    return formattedData;
-};
-
-const getGithubContributions = ({ username, config = {
-    partition: 'all',
-    proxy: null,
-    logs: 'none'
-} }) => __awaiter(void 0, void 0, void 0, function* () {
-    if (!username) {
-        throw new Error('You must provide a github username');
-    }
-    const requestProxy = (config === null || config === void 0 ? void 0 : config.proxy) ? config.proxy : null;
-    const logLevels = (config === null || config === void 0 ? void 0 : config.logs) ? config.logs : 'none';
-    const webpage = yield scraper({
-        username: username,
-        proxy: requestProxy,
-        logs: logLevels
-    });
-    if (!webpage) {
-        logger({
-            logLevel: logLevels,
-            message: 'A Github profile could not be fetched. There are likely errors above'
-        });
-        return null;
-    }
-    const urlsToQuery = parcer({
-        webpage: webpage,
-        partitions: config.partition,
-        username: username
-    });
-    if (!urlsToQuery) {
-        logger({
-            logLevel: logLevels,
-            message: `Contribution URLs could not be found. It is possible that Githubs DOM has changed. If you belive this to be the case open an issue at: https://github.com/SammyRobensParadise/github-contributions-counter`
-        });
-        return null;
-    }
-    const rawData = yield collector({
-        urlsToQuery: urlsToQuery,
-        proxy: requestProxy,
-        logs: logLevels
-    });
-    if (!rawData) {
-        logger({
-            logLevel: logLevels,
-            message: `Data returned is ${typeof rawData}. Expected non-empty array`
-        });
-        return null;
-    }
-    const result = format({ rawData: rawData, partition: config.partition });
-    if (!result) {
-        logger({
-            logLevel: logLevels,
-            message: `Unable to parce data, got result of ${typeof result}`
-        });
-    }
-    return result;
+    return response;
 });
 
 exports.getGithubContributions = getGithubContributions;

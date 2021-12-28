@@ -1,15 +1,30 @@
-export declare type LogLevels = 'error' | 'warning' | 'none';
-export declare type Partitions = undefined | 'year' | 'all' | 'current';
+import { AxiosResponse } from 'axios';
 export interface GetGithubContributions {
     username: string;
-    config?: {
-        partition?: Partitions;
-        proxy?: undefined | string | null;
-        logs?: LogLevels;
+    token: string;
+}
+export interface Response extends AxiosResponse {
+    data: {
+        data: {
+            user: {
+                name: string;
+                contributionsCollection: {
+                    contributionCalendar: {
+                        colors: string[];
+                        totalContributions: number;
+                        weeks: {
+                            firstDay: string;
+                            contributionDays: Array<{
+                                color: string;
+                                contributionCount: number;
+                                date: string;
+                                weekday: number;
+                            }>;
+                        }[];
+                    };
+                };
+            };
+        };
     };
 }
-export declare type All = {
-    year: string | (string | null)[];
-    contributions: string | null;
-};
-export declare const getGithubContributions: ({ username, config }: GetGithubContributions) => Promise<Array<All> | any>;
+export declare const getGithubContributions: ({ username, token }: GetGithubContributions) => Promise<any>;

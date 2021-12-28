@@ -27,4 +27,4 @@ export interface Response extends AxiosResponse {
         };
     };
 }
-export declare const getGithubContributions: ({ username, token }: GetGithubContributions) => Promise<any>;
+export declare const getGithubContributions: ({ username, token }: GetGithubContributions) => Promise<Response>;

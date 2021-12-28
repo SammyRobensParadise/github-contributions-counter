@@ -33,7 +33,7 @@ export interface Response extends AxiosResponse {
 export const getGithubContributions = async ({
   username,
   token
-}: GetGithubContributions): Promise<any> => {
+}: GetGithubContributions): Promise<Response> => {
   if (!username || !token) {
     throw new Error('You must provide a github username and token')
   }

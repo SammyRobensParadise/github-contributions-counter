@@ -1410,7 +1410,7 @@ var common = setup;
 
 /* eslint-env browser */
 
-var browser = createCommonjsModule(function (module, exports) {
+var browser$1 = createCommonjsModule(function (module, exports) {
 /**
  * This is the web browser implementation of `debug()`.
  */
@@ -2086,7 +2086,7 @@ formatters.O = function (v) {
 
 var src = createCommonjsModule(function (module) {
 if (typeof process === 'undefined' || process.type === 'renderer' || process.browser === true || process.__nwjs) {
-	module.exports = browser;
+	module.exports = browser$1;
 } else {
 	module.exports = node;
 }
@@ -2710,7 +2710,7 @@ var _where = "/Users/sammyrobens-paradise/projects/github-contributions-counter"
 var author = {
 	name: "Matt Zabriskie"
 };
-var browser$1 = {
+var browser = {
 	"./lib/adapters/http.js": "./lib/adapters/xhr.js"
 };
 var bugs = {
@@ -2807,7 +2807,7 @@ var pkg = {
 	_spec: _spec,
 	_where: _where,
 	author: author,
-	browser: browser$1,
+	browser: browser,
 	bugs: bugs,
 	bundleDependencies: bundleDependencies,
 	bundlesize: bundlesize,
@@ -3461,11 +3461,11 @@ var mergeConfig = function mergeConfig(config1, config2) {
   return config;
 };
 
-var validators = {};
+var validators$1 = {};
 
 // eslint-disable-next-line func-names
 ['object', 'boolean', 'number', 'function', 'string', 'symbol'].forEach(function(type, i) {
-  validators[type] = function validator(thing) {
+  validators$1[type] = function validator(thing) {
     return typeof thing === type || 'a' + (i < 1 ? 'n ' : ' ') + type;
   };
 });
@@ -3499,7 +3499,7 @@ function isOlderVersion(version, thanVersion) {
  * @param {string} message
  * @returns {function}
  */
-validators.transitional = function transitional(validator, version, message) {
+validators$1.transitional = function transitional(validator, version, message) {
   var isDeprecated = version && isOlderVersion(version);
 
   function formatMessage(opt, desc) {
@@ -3560,10 +3560,10 @@ function assertOptions(options, schema, allowUnknown) {
 var validator = {
   isOlderVersion: isOlderVersion,
   assertOptions: assertOptions,
-  validators: validators
+  validators: validators$1
 };
 
-var validators$1 = validator.validators;
+var validators = validator.validators;
 /**
  * Create a new instance of Axios
  *
@@ -3607,9 +3607,9 @@ Axios.prototype.request = function request(config) {
 
   if (transitional !== undefined) {
     validator.assertOptions(transitional, {
-      silentJSONParsing: validators$1.transitional(validators$1.boolean, '1.0.0'),
-      forcedJSONParsing: validators$1.transitional(validators$1.boolean, '1.0.0'),
-      clarifyTimeoutError: validators$1.transitional(validators$1.boolean, '1.0.0')
+      silentJSONParsing: validators.transitional(validators.boolean, '1.0.0'),
+      forcedJSONParsing: validators.transitional(validators.boolean, '1.0.0'),
+      clarifyTimeoutError: validators.transitional(validators.boolean, '1.0.0')
     }, false);
   }
 
@@ -3831,37 +3831,37 @@ function createInstance(defaultConfig) {
 }
 
 // Create the default instance to be exported
-var axios = createInstance(defaults_1);
+var axios$1 = createInstance(defaults_1);
 
 // Expose Axios class to allow class inheritance
-axios.Axios = Axios_1;
+axios$1.Axios = Axios_1;
 
 // Factory for creating new instances
-axios.create = function create(instanceConfig) {
-  return createInstance(mergeConfig(axios.defaults, instanceConfig));
+axios$1.create = function create(instanceConfig) {
+  return createInstance(mergeConfig(axios$1.defaults, instanceConfig));
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = Cancel_1;
-axios.CancelToken = CancelToken_1;
-axios.isCancel = isCancel;
+axios$1.Cancel = Cancel_1;
+axios$1.CancelToken = CancelToken_1;
+axios$1.isCancel = isCancel;
 
 // Expose all/spread
-axios.all = function all(promises) {
+axios$1.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = spread;
+axios$1.spread = spread;
 
 // Expose isAxiosError
-axios.isAxiosError = isAxiosError;
+axios$1.isAxiosError = isAxiosError;
 
-var axios_1 = axios;
+var axios_1 = axios$1;
 
 // Allow use of default import syntax in TypeScript
-var _default = axios;
+var _default = axios$1;
 axios_1.default = _default;
 
-var axios$1 = axios_1;
+var axios = axios_1;
 
 const getGithubContributions = ({ username, token }) => __awaiter(void 0, void 0, void 0, function* () {
     if (!username || !token) {
@@ -3892,7 +3892,7 @@ const getGithubContributions = ({ username, token }) => __awaiter(void 0, void 0
         }
       }`
     };
-    const response = yield axios$1({
+    const response = yield axios({
         url: 'https://api.github.com/graphql',
         method: 'post',
         data: { query: body.query },

@@ -1426,7 +1426,7 @@ var common = setup;
 
 /* eslint-env browser */
 
-var browser = createCommonjsModule(function (module, exports) {
+var browser$1 = createCommonjsModule(function (module, exports) {
 /**
  * This is the web browser implementation of `debug()`.
  */
@@ -1762,7 +1762,7 @@ function supportsColor(stream) {
 		// release, and Node.js 7 is not. Windows 10 build 10586 is the first Windows
 		// release that supports 256 colors. Windows 10 build 14931 is the first release
 		// that supports 16m/TrueColor.
-		const osRelease = os__default['default'].release().split('.');
+		const osRelease = os__default["default"].release().split('.');
 		if (
 			Number(process.versions.node.split('.')[0]) >= 8 &&
 			Number(osRelease[0]) >= 10 &&
@@ -1847,7 +1847,7 @@ exports.formatArgs = formatArgs;
 exports.save = save;
 exports.load = load;
 exports.useColors = useColors;
-exports.destroy = util__default['default'].deprecate(
+exports.destroy = util__default["default"].deprecate(
 	() => {},
 	'Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.'
 );
@@ -1987,7 +1987,7 @@ exports.inspectOpts = Object.keys(process.env).filter(key => {
 function useColors() {
 	return 'colors' in exports.inspectOpts ?
 		Boolean(exports.inspectOpts.colors) :
-		tty__default['default'].isatty(process.stderr.fd);
+		tty__default["default"].isatty(process.stderr.fd);
 }
 
 /**
@@ -2023,7 +2023,7 @@ function getDate() {
  */
 
 function log(...args) {
-	return process.stderr.write(util__default['default'].format(...args) + '\n');
+	return process.stderr.write(util__default["default"].format(...args) + '\n');
 }
 
 /**
@@ -2079,7 +2079,7 @@ const {formatters} = module.exports;
 
 formatters.o = function (v) {
 	this.inspectOpts.colors = this.useColors;
-	return util__default['default'].inspect(v, this.inspectOpts)
+	return util__default["default"].inspect(v, this.inspectOpts)
 		.split('\n')
 		.map(str => str.trim())
 		.join(' ');
@@ -2091,7 +2091,7 @@ formatters.o = function (v) {
 
 formatters.O = function (v) {
 	this.inspectOpts.colors = this.useColors;
-	return util__default['default'].inspect(v, this.inspectOpts);
+	return util__default["default"].inspect(v, this.inspectOpts);
 };
 });
 
@@ -2102,7 +2102,7 @@ formatters.O = function (v) {
 
 var src = createCommonjsModule(function (module) {
 if (typeof process === 'undefined' || process.type === 'renderer' || process.browser === true || process.__nwjs) {
-	module.exports = browser;
+	module.exports = browser$1;
 } else {
 	module.exports = node;
 }
@@ -2124,10 +2124,10 @@ var debug_1 = function () {
   debug.apply(null, arguments);
 };
 
-var URL = url__default['default'].URL;
+var URL = url__default["default"].URL;
 
 
-var Writable = require$$0__default['default'].Writable;
+var Writable = require$$0__default["default"].Writable;
 
 
 
@@ -2402,7 +2402,7 @@ RedirectableRequest.prototype._performRequest = function () {
   // Create the native request
   var request = this._currentRequest =
         nativeProtocol.request(this._options, this._onNativeResponse);
-  this._currentUrl = url__default['default'].format(this._options);
+  this._currentUrl = url__default["default"].format(this._options);
 
   // Set up event handlers
   request._redirectable = this;
@@ -2507,15 +2507,15 @@ RedirectableRequest.prototype._processResponse = function (response) {
   var currentHostHeader = removeMatchingHeaders(/^host$/i, this._options.headers);
 
   // If the redirect is relative, carry over the host of the last request
-  var currentUrlParts = url__default['default'].parse(this._currentUrl);
+  var currentUrlParts = url__default["default"].parse(this._currentUrl);
   var currentHost = currentHostHeader || currentUrlParts.host;
   var currentUrl = /^\w+:/.test(location) ? this._currentUrl :
-    url__default['default'].format(Object.assign(currentUrlParts, { host: currentHost }));
+    url__default["default"].format(Object.assign(currentUrlParts, { host: currentHost }));
 
   // Determine the URL of the redirection
   var redirectUrl;
   try {
-    redirectUrl = url__default['default'].resolve(currentUrl, location);
+    redirectUrl = url__default["default"].resolve(currentUrl, location);
   }
   catch (cause) {
     this.emit("error", new RedirectionError(cause));
@@ -2525,7 +2525,7 @@ RedirectableRequest.prototype._processResponse = function (response) {
   // Create the redirected request
   debug_1("redirecting to", redirectUrl);
   this._isRedirect = true;
-  var redirectUrlParts = url__default['default'].parse(redirectUrl);
+  var redirectUrlParts = url__default["default"].parse(redirectUrl);
   Object.assign(this._options, redirectUrlParts);
 
   // Drop confidential headers when redirecting to a less secure protocol
@@ -2584,7 +2584,7 @@ function wrap(protocols) {
         }
         catch (err) {
           /* istanbul ignore next */
-          input = url__default['default'].parse(urlStr);
+          input = url__default["default"].parse(urlStr);
         }
       }
       else if (URL && (input instanceof URL)) {
@@ -2607,7 +2607,7 @@ function wrap(protocols) {
       }, input, options);
       options.nativeProtocols = nativeProtocols;
 
-      assert__default['default'].equal(options.protocol, protocol, "protocol mismatch");
+      assert__default["default"].equal(options.protocol, protocol, "protocol mismatch");
       debug_1("options", options);
       return new RedirectableRequest(options, callback);
     }
@@ -2695,7 +2695,7 @@ function isSubdomain(subdomain, domain) {
 }
 
 // Exports
-var followRedirects = wrap({ http: http__default['default'], https: https__default['default'] });
+var followRedirects = wrap({ http: http__default["default"], https: https__default["default"] });
 var wrap_1 = wrap;
 followRedirects.wrap = wrap_1;
 
@@ -2726,7 +2726,7 @@ var _where = "/Users/sammyrobens-paradise/projects/github-contributions-counter"
 var author = {
 	name: "Matt Zabriskie"
 };
-var browser$1 = {
+var browser = {
 	"./lib/adapters/http.js": "./lib/adapters/xhr.js"
 };
 var bugs = {
@@ -2823,7 +2823,7 @@ var pkg = {
 	_spec: _spec,
 	_where: _where,
 	author: author,
-	browser: browser$1,
+	browser: browser,
 	bugs: bugs,
 	bundleDependencies: bundleDependencies,
 	bundlesize: bundlesize,
@@ -2931,7 +2931,7 @@ var http_1 = function httpAdapter(config) {
 
     // Parse url
     var fullPath = buildFullPath(config.baseURL, config.url);
-    var parsed = url__default['default'].parse(fullPath);
+    var parsed = url__default["default"].parse(fullPath);
     var protocol = parsed.protocol || 'http:';
 
     if (!auth && parsed.auth) {
@@ -2969,7 +2969,7 @@ var http_1 = function httpAdapter(config) {
       var proxyEnv = protocol.slice(0, -1) + '_proxy';
       var proxyUrl = process.env[proxyEnv] || process.env[proxyEnv.toUpperCase()];
       if (proxyUrl) {
-        var parsedProxyUrl = url__default['default'].parse(proxyUrl);
+        var parsedProxyUrl = url__default["default"].parse(proxyUrl);
         var noProxyEnv = process.env.no_proxy || process.env.NO_PROXY;
         var shouldProxy = true;
 
@@ -3022,7 +3022,7 @@ var http_1 = function httpAdapter(config) {
     if (config.transport) {
       transport = config.transport;
     } else if (config.maxRedirects === 0) {
-      transport = isHttpsProxy ? https__default['default'] : http__default['default'];
+      transport = isHttpsProxy ? https__default["default"] : http__default["default"];
     } else {
       if (config.maxRedirects) {
         options.maxRedirects = config.maxRedirects;
@@ -3053,7 +3053,7 @@ var http_1 = function httpAdapter(config) {
         case 'compress':
         case 'deflate':
         // add the unzipper to the body stream processing pipeline
-          stream = stream.pipe(zlib__default['default'].createUnzip());
+          stream = stream.pipe(zlib__default["default"].createUnzip());
 
           // remove the content-encoding in order to not confuse downstream operations
           delete res.headers['content-encoding'];
@@ -3477,11 +3477,11 @@ var mergeConfig = function mergeConfig(config1, config2) {
   return config;
 };
 
-var validators = {};
+var validators$1 = {};
 
 // eslint-disable-next-line func-names
 ['object', 'boolean', 'number', 'function', 'string', 'symbol'].forEach(function(type, i) {
-  validators[type] = function validator(thing) {
+  validators$1[type] = function validator(thing) {
     return typeof thing === type || 'a' + (i < 1 ? 'n ' : ' ') + type;
   };
 });
@@ -3515,7 +3515,7 @@ function isOlderVersion(version, thanVersion) {
  * @param {string} message
  * @returns {function}
  */
-validators.transitional = function transitional(validator, version, message) {
+validators$1.transitional = function transitional(validator, version, message) {
   var isDeprecated = version && isOlderVersion(version);
 
   function formatMessage(opt, desc) {
@@ -3576,10 +3576,10 @@ function assertOptions(options, schema, allowUnknown) {
 var validator = {
   isOlderVersion: isOlderVersion,
   assertOptions: assertOptions,
-  validators: validators
+  validators: validators$1
 };
 
-var validators$1 = validator.validators;
+var validators = validator.validators;
 /**
  * Create a new instance of Axios
  *
@@ -3623,9 +3623,9 @@ Axios.prototype.request = function request(config) {
 
   if (transitional !== undefined) {
     validator.assertOptions(transitional, {
-      silentJSONParsing: validators$1.transitional(validators$1.boolean, '1.0.0'),
-      forcedJSONParsing: validators$1.transitional(validators$1.boolean, '1.0.0'),
-      clarifyTimeoutError: validators$1.transitional(validators$1.boolean, '1.0.0')
+      silentJSONParsing: validators.transitional(validators.boolean, '1.0.0'),
+      forcedJSONParsing: validators.transitional(validators.boolean, '1.0.0'),
+      clarifyTimeoutError: validators.transitional(validators.boolean, '1.0.0')
     }, false);
   }
 
@@ -3847,37 +3847,37 @@ function createInstance(defaultConfig) {
 }
 
 // Create the default instance to be exported
-var axios = createInstance(defaults_1);
+var axios$1 = createInstance(defaults_1);
 
 // Expose Axios class to allow class inheritance
-axios.Axios = Axios_1;
+axios$1.Axios = Axios_1;
 
 // Factory for creating new instances
-axios.create = function create(instanceConfig) {
-  return createInstance(mergeConfig(axios.defaults, instanceConfig));
+axios$1.create = function create(instanceConfig) {
+  return createInstance(mergeConfig(axios$1.defaults, instanceConfig));
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = Cancel_1;
-axios.CancelToken = CancelToken_1;
-axios.isCancel = isCancel;
+axios$1.Cancel = Cancel_1;
+axios$1.CancelToken = CancelToken_1;
+axios$1.isCancel = isCancel;
 
 // Expose all/spread
-axios.all = function all(promises) {
+axios$1.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = spread;
+axios$1.spread = spread;
 
 // Expose isAxiosError
-axios.isAxiosError = isAxiosError;
+axios$1.isAxiosError = isAxiosError;
 
-var axios_1 = axios;
+var axios_1 = axios$1;
 
 // Allow use of default import syntax in TypeScript
-var _default = axios;
+var _default = axios$1;
 axios_1.default = _default;
 
-var axios$1 = axios_1;
+var axios = axios_1;
 
 const getGithubContributions = ({ username, token }) => __awaiter(void 0, void 0, void 0, function* () {
     if (!username || !token) {
@@ -3908,7 +3908,7 @@ const getGithubContributions = ({ username, token }) => __awaiter(void 0, void 0
         }
       }`
     };
-    const response = yield axios$1({
+    const response = yield axios({
         url: 'https://api.github.com/graphql',
         method: 'post',
         data: { query: body.query },
